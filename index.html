@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>學生點名系統 - 格數修正版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft JhengHei', '微軟正黑體', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+        .content { padding: 30px; }
+        .search-panel { background: #f0f4ff; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #667eea; }
+        .control-panel { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; align-items: center; padding: 20px; background: #f8f9fa; border-radius: 12px; }
+        .control-group { display: flex; gap: 10px; align-items: center; }
+        input, select, button { padding: 10px; border: 2px solid #ddd; border-radius: 8px; }
+        button { background: #667eea; color: white; cursor: pointer; font-weight: bold; border: none; }
+        button:hover { opacity: 0.9; }
+        .seat-grid-container { background: #f8f9fa; padding: 30px; border-radius: 12px; overflow: auto; text-align: center; }
+        .seat-grid { display: inline-grid; gap: 10px; padding: 20px; background: white; border-radius: 8px; }
+        .seat-cell { width: 120px; height: 110px; border: 2px dashed #ddd; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; position: relative; }
+        .student-seat-card { width: 100%; height: 100%; background: white; border: 2px solid #667eea; border-radius: 8px; padding: 8px; cursor: move; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .seat-number { font-size: 0.7em; color: #999; }
+        .seat-name { font-weight: bold; font-size: 1em; margin: 2px 0; }
+        .seat-points { font-size: 0.8em; color: #764ba2; font-weight: bold; background: #f0ebff; padding: 2px 6px; border-radius: 4px; }
+        .zoom-controls { display: flex; gap: 15px; align-items: center; margin-bottom: 15px; background: #eee; padding: 10px; border-radius: 8px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>📋 學生點名系統</h1>
+            <p>管理出勤與座位配置</p>
+        </div>
+
+        <div class="content">
+            <div class="search-panel">
+                <div class="control-group">
+                    <label><strong>⚙️ 顯示設定：</strong></label>
+                    <label style="cursor: pointer; background: #fff; padding: 5px 10px; border-radius: 5px; border: 1px solid #667eea;">
+                        <input type="checkbox" id="togglePoints" checked onchange="togglePointsDisplay()"> 顯示累計格數
+                    </label>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <div class="control-group">
+                    <label>姓名：</label><input type="text" id="studentName" placeholder="學生姓名">
+                </div>
+                <div class="control-group">
+                    <label>座號：</label><input type="number" id="studentNumber" min="1">
+                </div>
+                <button onclick="addStudent()">➕ 新增</button>
+                <div class="control-group">
+                    <label>日期：</label><input type="date" id="selectedDate">
+                </div>
+                <div class="control-group">
+                    <label>行列：</label>
+                    <input type="number" id="rows" value="6" style="width:60px"> x 
+                    <input type="number" id="cols" value="6" style="width:60px">
+                </div>
+                <button onclick="setupSeats()">🪑 設定座位</button>
+            </div>
+
+            <div class="zoom-controls">
+                <label>縮放：</label>
+                <input type="range" id="zoomSlider" min="50" max="150" value="100" oninput="adjustZoom(this.value)">
+                <span id="zoomVal">100%</span>
+                <button onclick="shuffleSeats()">🔀 隨機換位</button>
+            </div>
+
+            <div class="seat-grid-container">
+                <div class="seat-grid" id="seatGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 全域變數 ---
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        let studentPoints = {}; // 模擬格數資料
+        let showPoints = true; 
+        let rows = 6, cols = 6;
+
+        // --- 初始化 ---
+        window.onload = () => {
+            document.getElementById('selectedDate').valueAsDate = new Date();
+            // 模擬從 Google Sheets 抓到的資料
+            fetchMockPoints();
+            renderSeats();
+        };
+
+        // --- 核心功能：切換格數顯示 ---
+        function togglePointsDisplay() {
+            showPoints = document.getElementById('togglePoints').checked;
+            console.log("格數顯示狀態:", showPoints);
+            renderSeats(); // 立即重新渲染
+        }
+
+        // --- 渲染座位表 (修正後) ---
+        function renderSeats() {
+            const grid = document.getElementById('seatGrid');
+            grid.style.gridTemplateColumns = `repeat(${cols}, 120px)`;
+            grid.innerHTML = '';
+
+            for (let r = 1; r <= rows; r++) {
+                for (let c = 1; c <= cols; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'seat-cell';
+                    
+                    const student = students.find(s => s.row === r && s.col === c);
+                    if (student) {
+                        // 判斷是否要顯示格數 HTML
+                        const pointsHtml = showPoints ? 
+                            `<div class="seat-points">格數: ${studentPoints[student.number] || 0}</div>` : '';
+
+                        cell.innerHTML = `
+                            <div class="student-seat-card">
+                                <div class="seat-number">No.${student.number}</div>
+                                <div class="seat-name">${student.name}</div>
+                                ${pointsHtml}
+                            </div>
+                        `;
+                    } else {
+                        cell.innerHTML = '<span style="color:#ccc; font-size:12px">空位</span>';
+                    }
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // --- 其他輔助功能 ---
+        function addStudent() {
+            const name = document.getElementById('studentName').value;
+            const number = document.getElementById('studentNumber').value;
+            if(!name || !number) return alert('請輸入姓名座號');
+            
+            // 找空位放
+            students.push({ name, number, row: 1, col: 1 });
+            saveAndRender();
+        }
+
+        function setupSeats() {
+            rows = parseInt(document.getElementById('rows').value);
+            cols = parseInt(document.getElementById('cols').value);
+            renderSeats();
+        }
+
+        function adjustZoom(val) {
+            document.getElementById('zoomVal').innerText = val + '%';
+            document.getElementById('seatGrid').style.transform = `scale(${val/100})`;
+        }
+
+        function shuffleSeats() {
+            let seats = [];
+            for(let r=1; r<=rows; r++) for(let c=1; c<=cols; c++) seats.push({r, c});
+            
+            students.forEach(s => {
+                if(seats.length > 0) {
+                    let idx = Math.floor(Math.random() * seats.length);
+                    let pos = seats.splice(idx, 1)[0];
+                    s.row = pos.r;
+                    s.col = pos.c;
+                }
+            });
+            saveAndRender();
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('students', JSON.stringify(students));
+            renderSeats();
+        }
+
+        function fetchMockPoints() {
+            // 這裡模擬從 Google Sheets 讀取的資料
+            for(let i=1; i<=50; i++) {
+                studentPoints[i] = Math.floor(Math.random() * 20);
+            }
+        }
+    </script>
+</body>
+</html>
