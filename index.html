@@ -5,26 +5,749 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>學生點名系統</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Microsoft JhengHei', '微軟正黑體', Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
-        .content { padding: 30px; }
-        .control-panel { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; align-items: center; padding: 20px; background: #f8f9fa; border-radius: 12px; }
-        .seat-grid { display: inline-grid; gap: 10px; margin: 0 auto; padding: 20px; background: white; border-radius: 8px; }
-        .seat-cell { width: 120px; height: 100px; border: 2px dashed #ddd; border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative; }
-        .student-seat-card { width: 100%; height: 100%; border: 2px solid #667eea; border-radius: 8px; padding: 8px; cursor: move; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        .seat-points { font-size: 0.8em; color: #764ba2; font-weight: bold; margin-top: 2px; }
-        /* 模態框與其餘樣式皆依照原始檔案保留 */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
-        .modal.show { display: flex; }
-        .modal-content { background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', '微軟正黑體', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .search-panel {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e7f0ff 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #667eea;
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .search-results {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+
+        .search-result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+        }
+
+        .search-result-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .search-result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .search-result-info {
+            flex: 1;
+        }
+
+        .search-result-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .search-result-details {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .search-result-status {
+            margin-left: 15px;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .search-result-status.present {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .search-result-status.absent {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .search-result-status.none {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .search-result-actions {
+            display: flex;
+            gap: 10px;
+            margin-left: 15px;
+        }
+
+        .control-panel {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        input[type="date"],
+        input[type="text"],
+        input[type="number"],
+        select,
+        button {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input[type="number"] {
+            width: 80px;
+        }
+
+        input[type="date"]:focus,
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stats {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .seat-config {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #ffc107;
+        }
+
+        .seat-config h3 {
+            margin-bottom: 10px;
+            color: #856404;
+        }
+
+        .seat-grid-container {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 20px;
+            overflow: auto;
+            position: relative;
+            transform-origin: top center;
+            transition: transform 0.3s ease;
+        }
+
+        .zoom-controls {
+            position: sticky;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            z-index: 100;
+            margin-bottom: 10px;
+        }
+
+        .zoom-controls label {
+            font-weight: bold;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .zoom-slider {
+            width: 150px;
+            cursor: pointer;
+        }
+
+        .zoom-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .zoom-btn {
+            padding: 5px 12px;
+            font-size: 14px;
+            min-width: auto;
+        }
+
+        .seat-grid {
+            display: inline-grid;
+            gap: 10px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .seat-cell {
+            width: 120px;
+            height: 100px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            position: relative;
+            transition: all 0.3s;
+            min-height: 100px;
+        }
+
+        .seat-cell.dragover {
+            border-color: #667eea;
+            background: #e7f0ff;
+            transform: scale(1.05);
+            border-style: solid;
+            border-width: 3px;
+        }
+
+        .seat-cell.has-student {
+            border: 2px solid #667eea;
+            background: white;
+        }
+
+        .student-seat-card {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 8px;
+            cursor: move;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .delete-student-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 20;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .delete-student-btn:hover {
+            background: #c82333;
+            transform: scale(1.2);
+        }
+
+        .student-seat-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            z-index: 10;
+        }
+
+        .student-seat-card.dragging {
+            opacity: 0.5;
+        }
+
+        .student-seat-card.present {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .student-seat-card.absent {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .seat-number {
+            font-size: 0.7em;
+            color: #999;
+            margin-bottom: 2px;
+        }
+
+        .seat-name {
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #333;
+            margin-bottom: 4px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .seat-status {
+            font-size: 0.75em;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 2px;
+        }
+
+        .seat-status.present {
+            background: #28a745;
+            color: white;
+        }
+
+        .seat-status.absent {
+            background: #dc3545;
+            color: white;
+        }
+
+        .unassigned-students {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .unassigned-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            min-height: 60px;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .unassigned-list.dragover {
+            background: #e7f0ff;
+            border: 2px dashed #667eea;
+        }
+
+        .unassigned-card {
+            padding: 12px 18px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: move;
+            transition: all 0.3s;
+            user-select: none;
+            font-weight: 500;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .unassigned-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .unassigned-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .unassigned-delete-btn {
+            width: 24px;
+            height: 24px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            flex-shrink: 0;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .unassigned-delete-btn:hover {
+            background: #c82333;
+            transform: scale(1.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+
+        #studentRecordModal {
+            z-index: 2000;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+            font-size: 1.5em;
+        }
+
+        .attendance-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .attendance-option-btn {
+            padding: 30px 20px;
+            border: 3px solid #ddd;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .attendance-option-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .attendance-option-btn.present-option:hover {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .attendance-option-btn.absent-option:hover {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .option-icon {
+            font-size: 3em;
+            font-weight: bold;
+        }
+
+        .present-option .option-icon {
+            color: #28a745;
+        }
+
+        .absent-option .option-icon {
+            color: #dc3545;
+        }
+
+        .option-label {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .leave-type-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .leave-type-btn {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .leave-type-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateY(-2px);
+        }
+
+        .leave-type-btn.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .other-leave-input {
+            margin-top: 15px;
+            display: none;
+        }
+
+        #currentStatusInfo {
+            font-size: 1em;
+            color: #333;
+        }
+
+        #clearRecordBtn button {
+            padding: 12px;
+            font-size: 16px;
+        }
+
+        .period-buttons {
+            margin-top: 10px;
+        }
+
+        .period-btn {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .period-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateY(-2px);
+            color: #333;
+        }
+
+        .period-btn.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white !important;
+            transform: scale(1.05);
+        }
+
+        .other-leave-input.show {
+            display: block;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .modal-actions button {
+            min-width: 100px;
+        }
+
+        .empty-seat {
+            color: #999;
+            font-size: 0.8em;
+        }
+
+        @media (max-width: 768px) {
+            .control-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .seat-cell {
+                width: 100px;
+                height: 80px;
+            }
+        }
     </style>
-    
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
+
+<div style="margin:10px;">
+    <label>
+        <input type="checkbox" id="togglePoints" checked onchange="togglePointsDisplay()">
+        顯示格數
+    </label>
+</div>
+
     <div class="container">
         <div class="header">
             <h1>📋 學生點名系統</h1>
@@ -32,30 +755,363 @@
         </div>
 
         <div class="content">
+            <!-- 搜尋區域 -->
+            <div class="search-panel">
+                <h3 style="margin-bottom: 15px; color: #333;">🔍 快速搜尋與請假</h3>
+                <div class="search-controls">
+                    <div class="control-group">
+                        <label for="searchDate">搜尋日期：</label>
+                        <input type="date" id="searchDate">
+                    </div>
+                    <div class="control-group">
+                        <label for="searchInput">搜尋學生（姓名或座號）：</label>
+                        <input type="text" id="searchInput" placeholder="輸入姓名或座號">
+                    </div>
+                    <button id="searchBtn" onclick="searchStudents()" class="btn-success">🔍 搜尋</button>
+                    <button id="clearSearchBtn" onclick="clearSearch()" class="btn-danger">清除</button>
+                </div>
+                <div id="searchResults" class="search-results" style="display: none;"></div>
+            </div>
+
+            <!-- 控制面板 -->
             <div class="control-panel">
                 <div class="control-group">
-                    <label>姓名：</label>
+                    <label for="studentName">姓名：</label>
                     <input type="text" id="studentName" placeholder="學生姓名">
                 </div>
                 <div class="control-group">
-                    <label>座號：</label>
+                    <label for="studentNumber">座號：</label>
                     <input type="number" id="studentNumber" placeholder="座號" min="1">
                 </div>
                 <button onclick="addStudent()" class="btn-success">➕ 新增學生</button>
+                
                 <div class="control-group">
-                    <label>日期：</label>
+                    <label for="selectedDate">日期：</label>
                     <input type="date" id="selectedDate">
                 </div>
+
                 <div class="control-group">
-                    <label>行數：</label>
-                    <input type="number" id="rows" value="6" min="1" max="20">
+                    <label for="rows">行數：</label>
+                    <input type="number" id="rows" placeholder="行" min="1" max="20" value="6">
                 </div>
                 <div class="control-group">
-                    <label>列數：</label>
-                    <input type="number" id="cols" value="7" min="1" max="20">
+                    <label for="cols">列數：</label>
+                    <input type="number" id="cols" placeholder="列" min="1" max="20" value="6">
                 </div>
                 <button onclick="setupSeats()">🪑 設定座位</button>
+                </div>
+
+            <!-- 統計資訊 -->
+            <div class="stats" id="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalStudents">0</div>
+                    <div class="stat-label">總學生數</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="presentCount">0</div>
+                    <div class="stat-label">今日出席</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="absentCount">0</div>
+                    <div class="stat-label">今日請假</div>
+                </div>
             </div>
 
-            <div class="stats">
-                <div class="stat-item"><div class="stat-value
+            <!-- 座位配置 -->
+            <div class="seat-config" id="seatConfig" style="display: none;">
+                <h3>🪑 座位配置</h3>
+                <div id="topStudentsDisplay" style="margin-bottom: 15px; padding: 15px; background: #fff3cd; border-radius: 8px; border: 2px solid #ffc107; display: none;">
+                    <strong style="color: #856404;">⚠️ 格數最多前12名：</strong>
+                    <span id="topStudentsList" style="color: #856404; margin-left: 10px;"></span>
+                </div>
+                <div class="zoom-controls">
+                    <!-- ⭐ 新增：格數開關 -->
+                    <label style="margin-right: 10px;">
+                        <input type="checkbox" id="togglePoints" checked onchange="togglePointsDisplay()">
+                        顯示格數
+                    </label>
+                    <label>縮放：</label>
+                    <input type="range" id="zoomSlider" class="zoom-slider" min="30" max="150" value="100" step="5">
+                    <span class="zoom-value" id="zoomValue">100%</span>
+                    <button class="zoom-btn" onclick="resetZoom()">重置</button>
+                    <button class="zoom-btn" onclick="fitToScreen()">適應螢幕</button>
+
+                    <div style="margin-left:auto; display:flex; gap:10px;">
+                        <button class="zoom-btn btn-danger" onclick="shuffleSeats()">🔀 換座位</button>
+                        <button class="zoom-btn" onclick="undoShuffle()">↩️ 復原</button>
+                    </div>
+                </div>
+                <div class="seat-grid-container" id="seatGridContainer">
+                    <div class="seat-grid" id="seatGrid"></div>
+                </div>
+            </div>
+
+            <!-- 未分配座位的學生 -->
+            <div class="unassigned-students" id="unassignedStudents" style="display: none;">
+                <h3 class="section-title">未分配座位</h3>
+                <div class="unassigned-list" id="unassignedList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 出勤選擇模態框 -->
+    <div class="modal" id="attendanceModal">
+        <div class="modal-content">
+            <h3 id="attendanceModalTitle">選擇出勤狀態</h3>
+            <div id="currentStatusInfo" style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 8px; text-align: center; display: none;"></div>
+            <div class="attendance-options">
+                <button class="attendance-option-btn present-option" onclick="selectAttendance('present')">
+                    <div class="option-icon">✓</div>
+                    <div class="option-label">出席</div>
+                </button>
+                <button class="attendance-option-btn absent-option" onclick="selectAttendance('absent')">
+                    <div class="option-icon">✗</div>
+                    <div class="option-label">請假</div>
+                </button>
+            </div>
+            <div id="clearRecordBtn" style="margin-top: 15px; display: none;">
+                <button onclick="clearAttendanceRecord()" class="btn-danger" style="width: 100%;">清除記錄</button>
+            </div>
+            <div class="modal-actions">
+                <button onclick="closeAttendanceModal()" class="btn-danger" style="width: 100%;">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 假別選擇模態框 -->
+    <div class="modal" id="leaveTypeModal">
+        <div class="modal-content">
+            <h3>選擇假別</h3>
+            <div class="leave-type-buttons">
+                <button class="leave-type-btn" onclick="selectLeaveType('sick')">病假</button>
+                <button class="leave-type-btn" onclick="selectLeaveType('personal')">事假</button>
+                <button class="leave-type-btn" onclick="selectLeaveType('family')">家庭因素假</button>
+                <button class="leave-type-btn" onclick="selectLeaveType('other')">其他</button>
+            </div>
+            <div class="other-leave-input" id="otherLeaveInput">
+                <label>請輸入假別說明：</label>
+                <input type="text" id="otherLeaveText" placeholder="輸入假別說明" style="width: 100%; margin-top: 5px;">
+            </div>
+            <div class="period-selection" style="margin-top: 20px;">
+                <label style="display: block; margin-bottom: 10px; font-weight: bold;">選擇請假節次（可多選）：</label>
+                <div style="margin-bottom: 10px;">
+                    <button id="allDayBtn" class="period-btn all-day-btn" onclick="selectAllDay()" style="width: 100%; padding: 12px; font-weight: bold; background: #fff3cd; border-color: #ffc107; color: #856404;">
+                        全天請假
+                    </button>
+                </div>
+                <div class="period-buttons" id="periodButtons" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;">
+                    <!-- 節次按鈕將由 JavaScript 動態生成 -->
+                </div>
+                <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                    已選擇：<span id="selectedPeriodsText">無</span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button onclick="confirmLeaveType()" class="btn-success">確認</button>
+                <button onclick="cancelLeaveType()" class="btn-danger">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 學生記錄查看模態框 -->
+    <div class="modal" id="studentRecordModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h3 id="studentRecordTitle">學生出缺席記錄</h3>
+            <div id="studentRecordContent" style="max-height: 500px; overflow-y: auto;">
+                <!-- 記錄內容將由 JavaScript 動態生成 -->
+            </div>
+            <div class="modal-actions">
+                <button onclick="closeStudentRecord()" class="btn-danger" style="width: 100%;">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 請假名單模態框 -->
+    <div class="modal" id="absentListModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h3 id="absentListTitle">請假名單</h3>
+            <div id="absentListContent" style="max-height: 400px; overflow-y: auto;">
+                <!-- 請假名單內容將由 JavaScript 動態生成 -->
+            </div>
+            <div class="modal-actions">
+                <button onclick="closeAbsentList()" class="btn-danger" style="width: 100%;">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ===== Google Sheets 格數設定（修正新增） ===== */
+        const GOOGLE_SHEETS_URL =
+          'https://docs.google.com/spreadsheets/d/15YcjLSBNfVfXksPPXoCmIWFyYo3fk7aMGkp9GugoJQA/export?format=csv';
+
+        let studentPoints = {};
+        let showPoints = true; // 控制是否顯示格數
+        let previousSeatSnapshot = null; // 換座位前的備份
+
+        // ========== Firebase 設定區 ==========
+        let USE_FIREBASE = true;
+        
+        let db = null;
+        if (USE_FIREBASE) {
+            const firebaseConfig = {
+                apiKey: "AIzaSyBfgQhkccwSBqPcfOYp8QUR7RuvG9unKIc",
+                authDomain: "attendancesystem-yuderlee.firebaseapp.com",
+                projectId: "attendancesystem-yuderlee",
+                storageBucket: "attendancesystem-yuderlee.firebasestorage.app",
+                messagingSenderId: "894483934672",
+                appId: "1:894483934672:web:8b682215c90545e87f5dd5",
+                measurementId: "G-NPEVXTF5V9"
+            };
+            
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                console.log('Firebase 初始化成功');
+            } catch (error) {
+                console.error('Firebase 初始化失敗:', error);
+                USE_FIREBASE = false;
+            }
+        }
+
+        // 初始化：設定今天為預設日期
+        const today = new Date();
+        document.getElementById('selectedDate').valueAsDate = today;
+        document.getElementById('searchDate').valueAsDate = today;
+
+        // 確保一載入就以今日日期刷新畫面
+        setTimeout(() => {
+            renderSeats();
+            updateStats();
+        }, 0);
+
+        // 從 localStorage 或 Firebase 載入數據
+        let students = [];
+        let attendance = {};
+        let seatLayout = { rows: 6, cols: 6, seats: {} };
+        let dataLoaded = false;
+        let draggingStudent = null;
+        let currentLeaveStudent = null;
+        let selectedLeaveType = null;
+        let otherLeaveText = '';
+        let selectedPeriods = []; // 選中的節次
+
+        // 假別選項
+        const leaveTypes = {
+            'sick': '病假',
+            'personal': '事假',
+            'family': '家庭因素假',
+            'other': '其他'
+        };
+
+        // 新增學生
+        function addStudent() {
+            const nameInput = document.getElementById('studentName');
+            const numberInput = document.getElementById('studentNumber');
+            const name = nameInput.value.trim();
+            const number = parseInt(numberInput.value);
+
+            if (!name) {
+                alert('請輸入學生姓名！');
+                return;
+            }
+
+            if (!number || number < 1) {
+                alert('請輸入有效的座號！');
+                return;
+            }
+
+            if (students.find(s => s.name === name)) {
+                alert('該學生已存在！');
+                return;
+            }
+
+            if (students.find(s => s.number === number)) {
+                alert('該座號已被使用！');
+                return;
+            }
+
+            students.push({
+                name: name,
+                number: number,
+                row: null,
+                col: null
+            });
+
+            saveStudents();
+            nameInput.value = '';
+            numberInput.value = '';
+            renderSeats();
+            updateStats();
+        }
+
+        // 刪除學生
+        function deleteStudent(studentName) {
+            if (!confirm(`確定要刪除學生「${studentName}」嗎？\n\n此操作將同時刪除該學生的所有出勤記錄。`)) {
+                return;
+            }
+
+            students = students.filter(s => s.name !== studentName);
+
+            Object.keys(attendance).forEach(date => {
+                if (attendance[date][studentName]) {
+                    delete attendance[date][studentName];
+                }
+            });
+
+            saveStudents();
+            saveAttendance();
+            renderSeats();
+            updateStats();
+        }
+
+        // 設定座位
+        function setupSeats() {
+            const rows = parseInt(document.getElementById('rows').value) || 6;
+            const cols = parseInt(document.getElementById('cols').value) || 6;
+
+            if (rows < 1 || cols < 1 || rows > 20 || cols > 20) {
+                alert('行數和列數必須在 1-20 之間！');
+                return;
+            }
+
+            seatLayout.rows = rows;
+            seatLayout.cols = cols;
+            if (!seatLayout.seats) {
+                seatLayout.seats = {};
+            }
+
+            saveSeatLayout();
+            renderSeats();
+        }
+
+        // 打亂座位
+        function shuffleSeats() {
+            previousSeatSnapshot = students.map(s => ({ name: s.name, row: s.row, col: s.col }));
+            
+            if (!seatLayout.rows || !seatLayout.cols) {
+                alert('請先設定座位配置！');
+                return;
+            }
+
+            if (!confirm('確定要打亂所有學生的座位嗎？\n\n此操作會隨機重新分配所有已分配座位的學生。')) {
+                return;
+            }
+
+            const assignedStudents = students.filter(s => 
+                s.row !== null && s.row !== undefined && 
+                s.col !== null && s.col !== undefined &&
+                s.row >= 0 && s.row < seatLayout.rows &&
+                s.col >= 0 && s.col < seatLayout.cols
+            );
+
+            if (assignedStudents.length === 0) {
+                alert('目前沒有已分配座位的學生！');
+                return;
+            }
+
+            const occupiedSeats = assignedStudents.map(s => ({
+                row: s.row,
+                col: s.col
+            }));
+
+            const shuffled
