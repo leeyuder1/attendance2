@@ -5,16 +5,738 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>學生點名系統</title>
     <style>
-        /* 為了節省空間，這裡省略樣式，但在實際使用時請保留原本的完整樣式 */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Microsoft JhengHei', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
-        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
-        .content { padding: 30px; }
-        /* 請在此處補上原本的完整樣式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', '微軟正黑體', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .search-panel {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e7f0ff 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #667eea;
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .search-results {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+
+        .search-result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+        }
+
+        .search-result-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .search-result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .search-result-info {
+            flex: 1;
+        }
+
+        .search-result-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .search-result-details {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .search-result-status {
+            margin-left: 15px;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .search-result-status.present {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .search-result-status.absent {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .search-result-status.none {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .search-result-actions {
+            display: flex;
+            gap: 10px;
+            margin-left: 15px;
+        }
+
+        .control-panel {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        input[type="date"],
+        input[type="text"],
+        input[type="number"],
+        select,
+        button {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input[type="number"] {
+            width: 80px;
+        }
+
+        input[type="date"]:focus,
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stats {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .seat-config {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #ffc107;
+        }
+
+        .seat-config h3 {
+            margin-bottom: 10px;
+            color: #856404;
+        }
+
+        .seat-grid-container {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 20px;
+            overflow: auto;
+            position: relative;
+            transform-origin: top center;
+            transition: transform 0.3s ease;
+        }
+
+        .zoom-controls {
+            position: sticky;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            z-index: 100;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .zoom-controls label {
+            font-weight: bold;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .zoom-slider {
+            width: 150px;
+            cursor: pointer;
+        }
+
+        .zoom-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .zoom-btn {
+            padding: 5px 12px;
+            font-size: 14px;
+            min-width: auto;
+        }
+
+        .seat-grid {
+            display: inline-grid;
+            gap: 10px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .seat-cell {
+            width: 120px;
+            height: 100px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            position: relative;
+            transition: all 0.3s;
+            min-height: 100px;
+        }
+
+        .seat-cell.dragover {
+            border-color: #667eea;
+            background: #e7f0ff;
+            transform: scale(1.05);
+            border-style: solid;
+            border-width: 3px;
+        }
+
+        .seat-cell.has-student {
+            border: 2px solid #667eea;
+            background: white;
+        }
+
+        .student-seat-card {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 8px;
+            cursor: move;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .delete-student-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 20;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .delete-student-btn:hover {
+            background: #c82333;
+            transform: scale(1.2);
+        }
+
+        .student-seat-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            z-index: 10;
+        }
+
+        .student-seat-card.dragging {
+            opacity: 0.5;
+        }
+
+        .student-seat-card.present {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .student-seat-card.absent {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .seat-number {
+            font-size: 0.7em;
+            color: #999;
+            margin-bottom: 2px;
+        }
+
+        .seat-name {
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #333;
+            margin-bottom: 4px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .seat-status {
+            font-size: 0.75em;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 2px;
+        }
+
+        .seat-status.present {
+            background: #28a745;
+            color: white;
+        }
+
+        .seat-status.absent {
+            background: #dc3545;
+            color: white;
+        }
+
+        .unassigned-students {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .unassigned-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            min-height: 60px;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .unassigned-list.dragover {
+            background: #e7f0ff;
+            border: 2px dashed #667eea;
+        }
+
+        .unassigned-card {
+            padding: 12px 18px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: move;
+            transition: all 0.3s;
+            user-select: none;
+            font-weight: 500;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .unassigned-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .unassigned-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .unassigned-delete-btn {
+            width: 24px;
+            height: 24px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            flex-shrink: 0;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .unassigned-delete-btn:hover {
+            background: #c82333;
+            transform: scale(1.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+
+        #studentRecordModal {
+            z-index: 2000;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+            font-size: 1.5em;
+        }
+
+        .attendance-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .attendance-option-btn {
+            padding: 30px 20px;
+            border: 3px solid #ddd;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .attendance-option-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .attendance-option-btn.present-option:hover {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .attendance-option-btn.absent-option:hover {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .option-icon {
+            font-size: 3em;
+            font-weight: bold;
+        }
+
+        .present-option .option-icon {
+            color: #28a745;
+        }
+
+        .absent-option .option-icon {
+            color: #dc3545;
+        }
+
+        .option-label {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .leave-type-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .leave-type-btn {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .leave-type-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateY(-2px);
+        }
+
+        .leave-type-btn.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .other-leave-input {
+            margin-top: 15px;
+            display: none;
+        }
+
+        #currentStatusInfo {
+            font-size: 1em;
+            color: #333;
+        }
+
+        #clearRecordBtn button {
+            padding: 12px;
+            font-size: 16px;
+        }
+
+        .period-buttons {
+            margin-top: 10px;
+        }
+
+        .period-btn {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .period-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateY(-2px);
+            color: #333;
+        }
+
+        .period-btn.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white !important;
+            transform: scale(1.05);
+        }
+
+        .other-leave-input.show {
+            display: block;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .modal-actions button {
+            min-width: 100px;
+        }
+
+        .empty-seat {
+            color: #999;
+            font-size: 0.8em;
+        }
+
+        @media (max-width: 768px) {
+            .control-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .seat-cell {
+                width: 100px;
+                height: 80px;
+            }
+        }
     </style>
-    <!-- Firebase SDK - 正確的引入方式 -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
@@ -43,8 +765,8 @@
                     <input type="date" id="searchDate">
                 </div>
                 <div class="control-group">
-                    <label for="searchInput">搜尋學生：</label>
-                    <input type="text" id="searchInput" placeholder="姓名或座號">
+                    <label for="searchInput">搜尋學生（姓名或座號）：</label>
+                    <input type="text" id="searchInput" placeholder="輸入姓名或座號">
                 </div>
                 <button onclick="searchStudents()" class="btn-success">🔍 搜尋</button>
                 <button onclick="clearSearch()" class="btn-danger">清除</button>
@@ -104,15 +826,19 @@
                 <span id="topStudentsList" style="color:#856404; margin-left:10px;"></span>
             </div>
             <div class="zoom-controls">
-                <label><input type="checkbox" id="togglePoints" checked onchange="togglePointsDisplay()"> 顯示格數</label>
+                <label style="margin-right:10px;">
+                    <input type="checkbox" id="togglePoints" checked onchange="togglePointsDisplay()">
+                    顯示格數
+                </label>
                 <label>縮放：</label>
                 <input type="range" id="zoomSlider" class="zoom-slider" min="30" max="150" value="100" step="5">
                 <span class="zoom-value" id="zoomValue">100%</span>
-                <button onclick="resetZoom()">重置</button>
-                <button onclick="fitToScreen()">適應螢幕</button>
+                <button class="zoom-btn" onclick="resetZoom()">重置</button>
+                <button class="zoom-btn" onclick="fitToScreen()">適應螢幕</button>
+
                 <div style="margin-left:auto; display:flex; gap:10px;">
-                    <button class="btn-danger" onclick="shuffleSeats()">🔀 換座位</button>
-                    <button onclick="undoShuffle()">↩️ 復原</button>
+                    <button class="zoom-btn btn-danger" onclick="shuffleSeats()">🔀 換座位</button>
+                    <button class="zoom-btn" onclick="undoShuffle()">↩️ 復原</button>
                 </div>
             </div>
             <div class="seat-grid-container" id="seatGridContainer">
@@ -128,14 +854,84 @@
     </div>
 </div>
 
-<!-- 模態框們 -->
-<div class="modal" id="attendanceModal"><div class="modal-content"><h3 id="attendanceModalTitle">選擇出勤狀態</h3><div id="currentStatusInfo" style="margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:8px; display:none;"></div><div class="attendance-options"><button class="attendance-option-btn present-option" onclick="selectAttendance('present')"><div class="option-icon">✓</div><div class="option-label">出席</div></button><button class="attendance-option-btn absent-option" onclick="selectAttendance('absent')"><div class="option-icon">✗</div><div class="option-label">請假</div></button></div><div id="clearRecordBtn" style="margin-top:15px; display:none;"><button onclick="clearAttendanceRecord()" class="btn-danger" style="width:100%;">清除記錄</button></div><div class="modal-actions"><button onclick="closeAttendanceModal()" class="btn-danger" style="width:100%;">取消</button></div></div></div>
+<!-- 出勤選擇模態框 -->
+<div class="modal" id="attendanceModal">
+    <div class="modal-content">
+        <h3 id="attendanceModalTitle">選擇出勤狀態</h3>
+        <div id="currentStatusInfo" style="margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:8px; display:none;"></div>
+        <div class="attendance-options">
+            <button class="attendance-option-btn present-option" onclick="selectAttendance('present')">
+                <div class="option-icon">✓</div>
+                <div class="option-label">出席</div>
+            </button>
+            <button class="attendance-option-btn absent-option" onclick="selectAttendance('absent')">
+                <div class="option-icon">✗</div>
+                <div class="option-label">請假</div>
+            </button>
+        </div>
+        <div id="clearRecordBtn" style="margin-top:15px; display:none;">
+            <button onclick="clearAttendanceRecord()" class="btn-danger" style="width:100%;">清除記錄</button>
+        </div>
+        <div class="modal-actions">
+            <button onclick="closeAttendanceModal()" class="btn-danger" style="width:100%;">取消</button>
+        </div>
+    </div>
+</div>
 
-<div class="modal" id="leaveTypeModal"><div class="modal-content"><h3>選擇假別</h3><div class="leave-type-buttons"><button class="leave-type-btn" onclick="selectLeaveType('sick')">病假</button><button class="leave-type-btn" onclick="selectLeaveType('personal')">事假</button><button class="leave-type-btn" onclick="selectLeaveType('family')">家庭因素假</button><button class="leave-type-btn" onclick="selectLeaveType('other')">其他</button></div><div class="other-leave-input" id="otherLeaveInput"><label>請輸入假別說明：</label><input type="text" id="otherLeaveText" placeholder="輸入假別說明" style="width:100%; margin-top:5px;"></div><div class="period-selection"><label>選擇請假節次：</label><div><button id="allDayBtn" class="period-btn" onclick="selectAllDay()" style="width:100%;">全天請假</button></div><div class="period-buttons" id="periodButtons"></div><div>已選擇：<span id="selectedPeriodsText">無</span></div></div><div class="modal-actions"><button onclick="confirmLeaveType()" class="btn-success">確認</button><button onclick="cancelLeaveType()" class="btn-danger">取消</button></div></div></div>
+<!-- 假別選擇模態框 -->
+<div class="modal" id="leaveTypeModal">
+    <div class="modal-content">
+        <h3>選擇假別</h3>
+        <div class="leave-type-buttons">
+            <button class="leave-type-btn" onclick="selectLeaveType('sick')">病假</button>
+            <button class="leave-type-btn" onclick="selectLeaveType('personal')">事假</button>
+            <button class="leave-type-btn" onclick="selectLeaveType('family')">家庭因素假</button>
+            <button class="leave-type-btn" onclick="selectLeaveType('other')">其他</button>
+        </div>
+        <div class="other-leave-input" id="otherLeaveInput">
+            <label>請輸入假別說明：</label>
+            <input type="text" id="otherLeaveText" placeholder="輸入假別說明" style="width:100%; margin-top:5px;">
+        </div>
+        <div class="period-selection" style="margin-top:20px;">
+            <label style="display:block; margin-bottom:10px; font-weight:bold;">選擇請假節次（可多選）：</label>
+            <div style="margin-bottom:10px;">
+                <button id="allDayBtn" class="period-btn all-day-btn" onclick="selectAllDay()" style="width:100%; padding:12px; font-weight:bold; background:#fff3cd; border-color:#ffc107; color:#856404;">
+                    全天請假
+                </button>
+            </div>
+            <div class="period-buttons" id="periodButtons" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;"></div>
+            <div style="margin-top:10px; font-size:0.9em; color:#666;">
+                已選擇：<span id="selectedPeriodsText">無</span>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button onclick="confirmLeaveType()" class="btn-success">確認</button>
+            <button onclick="cancelLeaveType()" class="btn-danger">取消</button>
+        </div>
+    </div>
+</div>
 
-<div class="modal" id="studentRecordModal"><div class="modal-content" style="max-width:700px;"><h3 id="studentRecordTitle">學生出缺席記錄</h3><div id="studentRecordContent" style="max-height:500px; overflow-y:auto;"></div><div class="modal-actions"><button onclick="closeStudentRecord()" class="btn-danger" style="width:100%;">關閉</button></div></div></div>
+<!-- 學生記錄查看模態框 -->
+<div class="modal" id="studentRecordModal">
+    <div class="modal-content" style="max-width:700px;">
+        <h3 id="studentRecordTitle">學生出缺席記錄</h3>
+        <div id="studentRecordContent" style="max-height:500px; overflow-y:auto;"></div>
+        <div class="modal-actions">
+            <button onclick="closeStudentRecord()" class="btn-danger" style="width:100%;">關閉</button>
+        </div>
+    </div>
+</div>
 
-<div class="modal" id="absentListModal"><div class="modal-content" style="max-width:600px;"><h3 id="absentListTitle">請假名單</h3><div id="absentListContent" style="max-height:400px; overflow-y:auto;"></div><div class="modal-actions"><button onclick="closeAbsentList()" class="btn-danger" style="width:100%;">關閉</button></div></div></div>
+<!-- 請假名單模態框 -->
+<div class="modal" id="absentListModal">
+    <div class="modal-content" style="max-width:600px;">
+        <h3 id="absentListTitle">請假名單</h3>
+        <div id="absentListContent" style="max-height:400px; overflow-y:auto;"></div>
+        <div class="modal-actions">
+            <button onclick="closeAbsentList()" class="btn-danger" style="width:100%;">關閉</button>
+        </div>
+    </div>
+</div>
 
 <script>
 // ========== Firebase 設定 ==========
@@ -149,12 +945,7 @@ const firebaseConfig = {
 };
 
 // 初始化 Firebase
-try {
-    firebase.initializeApp(firebaseConfig);
-    console.log('Firebase 初始化成功');
-} catch (error) {
-    console.error('Firebase 初始化失敗:', error);
-}
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // ========== 全域變數 ==========
@@ -730,7 +1521,8 @@ function togglePeriod(period) {
     }
     selectedPeriods.sort((a, b) => a - b);
     
-    document.querySelector(`.period-btn[data-period="${period}"]`).classList.toggle('selected');
+    const btn = document.querySelector(`.period-btn[data-period="${period}"]`);
+    if (btn) btn.classList.toggle('selected');
     
     // 更新全天按鈕狀態
     const allDayBtn = document.getElementById('allDayBtn');
@@ -818,4 +1610,227 @@ function searchStudents() {
     if (!keyword) { alert('請輸入關鍵字'); return; }
     
     const matched = students.filter(s => 
-        s.name
+        s.name.toLowerCase().includes(keyword) || 
+        s.number.toString().includes(keyword)
+    );
+    
+    if (matched.length === 0) {
+        resultsDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">找不到符合的學生</div>';
+        resultsDiv.style.display = 'block';
+        return;
+    }
+    
+    resultsDiv.innerHTML = matched.map(s => {
+        const record = attendance[date]?.[s.name];
+        let statusText = '未記錄', statusClass = 'none';
+        if (record?.status === 'present') {
+            statusText = '✓ 出席';
+            statusClass = 'present';
+        } else if (record?.status === 'absent') {
+            statusText = `✗ 請假 - ${record.leaveTypeLabel || '其他'}`;
+            statusClass = 'absent';
+        }
+        
+        return `
+            <div class="search-result-item">
+                <div class="search-result-info">
+                    <div class="search-result-name" onclick="showStudentRecord('${s.name}')">${s.name}</div>
+                    <div class="search-result-details">座號：${s.number} | ${formatDate(date)}</div>
+                </div>
+                <div class="search-result-status ${statusClass}">${statusText}</div>
+                <div class="search-result-actions">
+                    <button onclick="searchShowAttendance('${s.name}', '${date}')" class="btn-success">📝 記錄</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    resultsDiv.style.display = 'block';
+}
+
+function searchShowAttendance(name, date) {
+    document.getElementById('selectedDate').value = date;
+    showAttendanceOptions(name);
+}
+
+function clearSearch() {
+    document.getElementById('searchDate').value = document.getElementById('selectedDate').value;
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchResults').style.display = 'none';
+}
+
+// ========== 格式化日期 ==========
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString + 'T00:00:00');
+    return `${date.getFullYear()}年${date.getMonth()+1}月${date.getDate()}日`;
+}
+
+// ========== 學生記錄 ==========
+function showStudentRecord(name) {
+    const student = students.find(s => s.name === name);
+    if (!student) return;
+    
+    document.getElementById('studentRecordTitle').textContent = `${student.name} (座號 ${student.number}) 的出缺席記錄`;
+    
+    const records = [];
+    Object.keys(attendance).sort().reverse().forEach(date => {
+        if (attendance[date][name]) records.push({ date, record: attendance[date][name] });
+    });
+    
+    const content = document.getElementById('studentRecordContent');
+    if (records.length === 0) {
+        content.innerHTML = '<div style="text-align:center; padding:40px; color:#999;">尚無出缺席記錄</div>';
+    } else {
+        content.innerHTML = records.map(({ date, record }) => {
+            if (record.status === 'present') {
+                return `<div class="search-result-item" onclick="editStudentRecord('${name}', '${date}')"><div class="search-result-info"><div class="search-result-name">${formatDate(date)}</div><div class="search-result-details">狀態：出席</div></div><div class="search-result-status present">✓ 出席</div></div>`;
+            } else {
+                let leaveInfo = record.leaveTypeLabel || '其他';
+                if (record.periodsText) leaveInfo += ` (${record.periodsText})`;
+                return `<div class="search-result-item" onclick="editStudentRecord('${name}', '${date}')"><div class="search-result-info"><div class="search-result-name">${formatDate(date)}</div><div class="search-result-details">假別：${leaveInfo}</div></div><div class="search-result-status absent">✗ 請假</div></div>`;
+            }
+        }).join('');
+    }
+    
+    document.getElementById('studentRecordModal').classList.add('show');
+}
+
+function editStudentRecord(name, date) {
+    document.getElementById('selectedDate').value = date;
+    closeStudentRecord();
+    setTimeout(() => showAttendanceOptions(name), 200);
+}
+
+function closeStudentRecord() {
+    document.getElementById('studentRecordModal').classList.remove('show');
+}
+
+// ========== 請假名單 ==========
+function showAbsentList(date) {
+    if (!date || !attendance[date]) return;
+    
+    const absentStudents = Object.keys(attendance[date])
+        .filter(name => attendance[date][name].status === 'absent')
+        .map(name => {
+            const student = students.find(s => s.name === name);
+            return { student, record: attendance[date][name] };
+        })
+        .filter(item => item.student)
+        .sort((a, b) => a.student.number - b.student.number);
+    
+    if (absentStudents.length === 0) return;
+    
+    document.getElementById('absentListTitle').textContent = `${formatDate(date)} 請假名單`;
+    document.getElementById('absentListContent').innerHTML = absentStudents.map(({ student, record }) => {
+        let leaveInfo = record.leaveTypeLabel || '其他';
+        if (record.periodsText) leaveInfo += ` (${record.periodsText})`;
+        return `<div class="search-result-item" onclick="closeAbsentList(); setTimeout(() => showStudentRecord('${student.name}'), 100);"><div class="search-result-info"><div class="search-result-name">${student.name}</div><div class="search-result-details">座號：${student.number} | 假別：${leaveInfo}</div></div></div>`;
+    }).join('');
+    
+    document.getElementById('absentListModal').classList.add('show');
+}
+
+function closeAbsentList() {
+    document.getElementById('absentListModal').classList.remove('show');
+}
+
+// ========== 縮放功能 ==========
+let currentZoom = 100;
+
+function initZoomControls() {
+    const slider = document.getElementById('zoomSlider');
+    const value = document.getElementById('zoomValue');
+    const container = document.getElementById('seatGridContainer');
+    
+    if (!slider || !value || !container) return;
+    
+    const saved = localStorage.getItem('seatZoom');
+    if (saved) {
+        currentZoom = parseInt(saved);
+        slider.value = currentZoom;
+        value.textContent = currentZoom + '%';
+        container.style.transform = `scale(${currentZoom / 100})`;
+    }
+    
+    slider.addEventListener('input', function(e) {
+        currentZoom = parseInt(e.target.value);
+        value.textContent = currentZoom + '%';
+        container.style.transform = `scale(${currentZoom / 100})`;
+        localStorage.setItem('seatZoom', currentZoom);
+    });
+}
+
+function resetZoom() {
+    const slider = document.getElementById('zoomSlider');
+    const value = document.getElementById('zoomValue');
+    const container = document.getElementById('seatGridContainer');
+    
+    if (slider && value && container) {
+        currentZoom = 100;
+        slider.value = currentZoom;
+        value.textContent = currentZoom + '%';
+        container.style.transform = 'scale(1)';
+        localStorage.setItem('seatZoom', currentZoom);
+    }
+}
+
+function fitToScreen() {
+    const container = document.getElementById('seatGridContainer');
+    const grid = document.getElementById('seatGrid');
+    const slider = document.getElementById('zoomSlider');
+    const value = document.getElementById('zoomValue');
+    
+    if (!container || !grid || !seatLayout.rows || !seatLayout.cols) return;
+    
+    const seatWidth = 120, seatHeight = 100, gap = 10, padding = 40;
+    const gridWidth = (seatWidth + gap) * seatLayout.cols - gap + padding;
+    const gridHeight = (seatHeight + gap) * seatLayout.rows - gap + padding;
+    
+    const viewportWidth = window.innerWidth - 100;
+    const viewportHeight = window.innerHeight - 300;
+    
+    const scaleX = viewportWidth / gridWidth;
+    const scaleY = viewportHeight / gridHeight;
+    const optimalScale = Math.min(scaleX, scaleY, 1) * 100;
+    
+    currentZoom = Math.max(30, Math.min(100, Math.floor(optimalScale / 5) * 5));
+    
+    if (slider && value) {
+        slider.value = currentZoom;
+        value.textContent = currentZoom + '%';
+    }
+    container.style.transform = `scale(${currentZoom / 100})`;
+    localStorage.setItem('seatZoom', currentZoom);
+}
+
+// ========== 格數顯示切換 ==========
+function togglePointsDisplay() {
+    showPoints = document.getElementById('togglePoints').checked;
+    renderSeats();
+}
+
+// ========== 日期自動更新 ==========
+function getTaiwanTime() {
+    const now = new Date();
+    return new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+}
+
+function setAllDatesToToday() {
+    const t = getTaiwanTime();
+    const yyyy = t.getFullYear();
+    const mm = String(t.getMonth() + 1).padStart(2, '0');
+    const dd = String(t.getDate()).padStart(2, '0');
+    const today = `${yyyy}-${mm}-${dd}`;
+    
+    document.querySelectorAll('input[type="date"]').forEach(el => {
+        el.value = today;
+    });
+}
+
+// 初始化日期
+setAllDatesToToday();
+</script>
+
+</body>
+</html>
