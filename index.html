@@ -341,8 +341,8 @@
         }
 
         .seat-cell {
-            width: 120px;
-            height: 100px;
+            width: 130px;  /* 稍微增加寬度 */
+            height: 110px; /* 稍微增加高度 */
             border: 2px dashed #ddd;
             border-radius: 8px;
             display: flex;
@@ -351,7 +351,7 @@
             background: #f8f9fa;
             position: relative;
             transition: all 0.3s;
-            min-height: 100px;
+            min-height: 110px;
         }
 
         .seat-cell.dragover {
@@ -378,7 +378,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             transition: all 0.3s;
             position: relative;
         }
@@ -437,11 +437,13 @@
 
         .seat-name {
             font-weight: bold;
-            font-size: 0.9em;
+            font-size: 1.1em;
             color: #333;
-            margin-bottom: 4px;
             cursor: pointer;
             text-decoration: underline;
+            text-align: center;
+            word-break: break-word; /* 讓長名字可以換行 */
+            max-width: 100%;
         }
 
         .seat-class {
@@ -451,10 +453,11 @@
         }
 
         .seat-status {
-            font-size: 0.75em;
-            padding: 2px 6px;
+            font-size: 0.85em;
+            padding: 4px 8px;
             border-radius: 4px;
             margin-top: 2px;
+            width: fit-content;
         }
 
         .seat-status.present {
@@ -1427,10 +1430,12 @@ function renderSeats() {
                     // 班級和座號互換位置
                     card.innerHTML = `
                         <button class="delete-student-btn" onclick="event.stopPropagation(); deleteStudent('${student.name}')">×</button>
-                        <div class="seat-number">${student.number}號</div>
-                        <div class="seat-class">${student.class || ''}</div>
-                        <div class="seat-name" onclick="event.stopPropagation(); showStudentRecord('${student.name}')">${student.name}${pointsText}</div>
-                        ${date ? (isPresent ? '<div class="seat-status present">✓ 出席</div>' : (isAbsent ? '<div class="seat-status absent">✗ 請假</div>' : '')) : ''}
+                        <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 5px;">
+                            <span style="font-size: 0.85em; font-weight: bold; color: #667eea;">${student.class || ''}</span>
+                            <span style="font-size: 0.85em; font-weight: bold; color: #333;">${student.number}號</span>
+                        </div>
+                        <div class="seat-name" style="font-size: 1.1em; font-weight: bold; margin: 5px 0; text-align: center;" onclick="event.stopPropagation(); showStudentRecord('${student.name}')">${student.name}${pointsText}</div>
+                        ${date ? (isPresent ? '<div class="seat-status present" style="font-size: 0.85em; padding: 4px 8px;">✓ 出席</div>' : (isAbsent ? '<div class="seat-status absent" style="font-size: 0.85em; padding: 4px 8px;">✗ 請假</div>' : '')) : ''}
                     `;
 
                     card.addEventListener('click', (e) => {
