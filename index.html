@@ -209,6 +209,10 @@
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         }
 
+        .btn-warning {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        }
+
         .stats {
             background: #f8f9fa;
             padding: 20px;
@@ -527,6 +531,10 @@
             z-index: 2000;
         }
 
+        #editStudentModal {
+            z-index: 2100;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -719,6 +727,42 @@
             font-size: 0.8em;
         }
 
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .record-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .record-actions button {
+            flex: 1;
+        }
+
         @media (max-width: 768px) {
             .control-panel {
                 flex-direction: column;
@@ -741,13 +785,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
-
-<div style="margin:10px;">
-    <label>
-        <input type="checkbox" id="togglePoints" checked onchange="togglePointsDisplay()">
-        顯示格數
-    </label>
-</div>
 
 <div class="container">
     <div class="header">
@@ -915,9 +952,29 @@
 <div class="modal" id="studentRecordModal">
     <div class="modal-content" style="max-width:700px;">
         <h3 id="studentRecordTitle">學生出缺席記錄</h3>
-        <div id="studentRecordContent" style="max-height:500px; overflow-y:auto;"></div>
+        <div id="studentRecordContent" style="max-height:400px; overflow-y:auto; margin-bottom:20px;"></div>
+        <div class="record-actions">
+            <button onclick="showEditStudentModal()" class="btn-warning" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">✏️ 修改基本資料</button>
+            <button onclick="closeStudentRecord()" class="btn-danger">關閉</button>
+        </div>
+    </div>
+</div>
+
+<!-- 修改學生資料模態框 -->
+<div class="modal" id="editStudentModal">
+    <div class="modal-content">
+        <h3 id="editStudentTitle">修改學生資料</h3>
+        <div class="form-group">
+            <label for="editStudentName">姓名：</label>
+            <input type="text" id="editStudentName" placeholder="請輸入姓名">
+        </div>
+        <div class="form-group">
+            <label for="editStudentNumber">座號：</label>
+            <input type="number" id="editStudentNumber" placeholder="請輸入座號" min="1">
+        </div>
         <div class="modal-actions">
-            <button onclick="closeStudentRecord()" class="btn-danger" style="width:100%;">關閉</button>
+            <button onclick="saveEditStudent()" class="btn-success">儲存</button>
+            <button onclick="closeEditStudentModal()" class="btn-danger">取消</button>
         </div>
     </div>
 </div>
@@ -926,7 +983,7 @@
 <div class="modal" id="absentListModal">
     <div class="modal-content" style="max-width:600px;">
         <h3 id="absentListTitle">請假名單</h3>
-        <div id="absentListContent" style="max-height:400px; overflow-y:auto;"></div>
+        <div id="absentListContent" style="max-height:400px; overflow-y:auto; margin-bottom:20px;"></div>
         <div class="modal-actions">
             <button onclick="closeAbsentList()" class="btn-danger" style="width:100%;">關閉</button>
         </div>
@@ -957,6 +1014,7 @@ let showPoints = true;
 let previousSeatSnapshot = null;
 let draggingStudent = null;
 let currentLeaveStudent = null;
+let currentEditStudent = null;
 let selectedLeaveType = null;
 let otherLeaveText = '';
 let selectedPeriods = [];
@@ -1671,6 +1729,7 @@ function showStudentRecord(name) {
     const student = students.find(s => s.name === name);
     if (!student) return;
     
+    currentEditStudent = student;
     document.getElementById('studentRecordTitle').textContent = `${student.name} (座號 ${student.number}) 的出缺席記錄`;
     
     const records = [];
@@ -1704,6 +1763,66 @@ function editStudentRecord(name, date) {
 
 function closeStudentRecord() {
     document.getElementById('studentRecordModal').classList.remove('show');
+}
+
+// ========== 修改學生資料 ==========
+function showEditStudentModal() {
+    if (!currentEditStudent) return;
+    
+    document.getElementById('editStudentTitle').textContent = `修改學生資料 - ${currentEditStudent.name}`;
+    document.getElementById('editStudentName').value = currentEditStudent.name;
+    document.getElementById('editStudentNumber').value = currentEditStudent.number;
+    
+    document.getElementById('editStudentModal').classList.add('show');
+}
+
+function closeEditStudentModal() {
+    document.getElementById('editStudentModal').classList.remove('show');
+    currentEditStudent = null;
+}
+
+async function saveEditStudent() {
+    if (!currentEditStudent) return;
+    
+    const newName = document.getElementById('editStudentName').value.trim();
+    const newNumber = parseInt(document.getElementById('editStudentNumber').value);
+    
+    if (!newName) { alert('請輸入姓名！'); return; }
+    if (!newNumber || newNumber < 1) { alert('請輸入有效座號！'); return; }
+    
+    // 檢查姓名是否已被其他學生使用
+    const nameExists = students.find(s => s.name === newName && s.name !== currentEditStudent.name);
+    if (nameExists) { alert('此姓名已被其他學生使用！'); return; }
+    
+    // 檢查座號是否已被其他學生使用
+    const numberExists = students.find(s => s.number === newNumber && s.name !== currentEditStudent.name);
+    if (numberExists) { alert('此座號已被其他學生使用！'); return; }
+    
+    const oldName = currentEditStudent.name;
+    
+    // 更新學生資料
+    currentEditStudent.name = newName;
+    currentEditStudent.number = newNumber;
+    
+    // 更新出勤記錄中的學生名稱（如果姓名有變更）
+    if (oldName !== newName) {
+        Object.keys(attendance).forEach(date => {
+            if (attendance[date][oldName]) {
+                attendance[date][newName] = attendance[date][oldName];
+                delete attendance[date][oldName];
+            }
+        });
+    }
+    
+    await saveStudents();
+    await saveAttendance();
+    
+    closeEditStudentModal();
+    closeStudentRecord();
+    renderSeats();
+    updateStats();
+    
+    alert('學生資料修改成功！');
 }
 
 // ========== 請假名單 ==========
