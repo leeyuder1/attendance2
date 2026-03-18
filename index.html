@@ -1903,10 +1903,18 @@ function searchStudents() {
     if (!date) { alert('請選擇日期'); return; }
     if (!keyword) { alert('請輸入關鍵字'); return; }
     
-    const matched = students.filter(s => 
-        s.name.toLowerCase().includes(keyword) || 
-        s.number.toString().includes(keyword)
-    );
+    // 判斷是否為純數字（用於精確比對座號）
+    const isNumber = /^\d+$/.test(keyword);
+    const searchNumber = isNumber ? parseInt(keyword) : null;
+    
+    const matched = students.filter(s => {
+        // 如果是數字，精確比對座號
+        if (isNumber) {
+            return s.number === searchNumber;
+        }
+        // 否則比對姓名（包含關鍵字）
+        return s.name.toLowerCase().includes(keyword);
+    });
     
     if (matched.length === 0) {
         resultsDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">找不到符合的學生</div>';
