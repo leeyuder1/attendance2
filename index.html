@@ -424,6 +424,12 @@
             text-decoration: underline;
         }
 
+        .seat-class {
+            font-size: 0.7em;
+            color: #667eea;
+            margin-bottom: 2px;
+        }
+
         .seat-status {
             font-size: 0.75em;
             padding: 2px 6px;
@@ -738,7 +744,8 @@
             color: #333;
         }
 
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
             padding: 10px;
             border: 2px solid #ddd;
@@ -746,7 +753,8 @@
             font-size: 16px;
         }
 
-        .form-group input:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -816,6 +824,27 @@
             <div class="control-group">
                 <label for="studentName">姓名：</label>
                 <input type="text" id="studentName" placeholder="學生姓名">
+            </div>
+            <div class="control-group">
+                <label for="studentClass">班級：</label>
+                <select id="studentClass">
+                    <option value="">請選擇班級</option>
+                    <option value="901">901</option>
+                    <option value="902">902</option>
+                    <option value="903">903</option>
+                    <option value="904">904</option>
+                    <option value="905">905</option>
+                    <option value="906">906</option>
+                    <option value="907">907</option>
+                    <option value="908">908</option>
+                    <option value="909">909</option>
+                    <option value="910">910</option>
+                    <option value="911">911</option>
+                    <option value="912">912</option>
+                    <option value="913">913</option>
+                    <option value="914">914</option>
+                    <option value="915">915</option>
+                </select>
             </div>
             <div class="control-group">
                 <label for="studentNumber">座號：</label>
@@ -967,6 +996,27 @@
         <div class="form-group">
             <label for="editStudentName">姓名：</label>
             <input type="text" id="editStudentName" placeholder="請輸入姓名">
+        </div>
+        <div class="form-group">
+            <label for="editStudentClass">班級：</label>
+            <select id="editStudentClass">
+                <option value="">請選擇班級</option>
+                <option value="901">901</option>
+                <option value="902">902</option>
+                <option value="903">903</option>
+                <option value="904">904</option>
+                <option value="905">905</option>
+                <option value="906">906</option>
+                <option value="907">907</option>
+                <option value="908">908</option>
+                <option value="909">909</option>
+                <option value="910">910</option>
+                <option value="911">911</option>
+                <option value="912">912</option>
+                <option value="913">913</option>
+                <option value="914">914</option>
+                <option value="915">915</option>
+            </select>
         </div>
         <div class="form-group">
             <label for="editStudentNumber">座號：</label>
@@ -1199,6 +1249,7 @@ function renderSeats() {
                     card.innerHTML = `
                         <button class="delete-student-btn" onclick="event.stopPropagation(); deleteStudent('${student.name}')">×</button>
                         <div class="seat-number">座號 ${student.number}</div>
+                        <div class="seat-class">${student.class || ''}</div>
                         <div class="seat-name" onclick="event.stopPropagation(); showStudentRecord('${student.name}')">${student.name}${pointsText}</div>
                         ${date ? (isPresent ? '<div class="seat-status present">✓ 出席</div>' : (isAbsent ? '<div class="seat-status absent">✗ 請假</div>' : '<div style="font-size:0.7em; color:#999;">未記錄</div>')) : ''}
                     `;
@@ -1287,7 +1338,7 @@ function renderSeats() {
             card.dataset.studentName = student.name;
 
             card.innerHTML = `
-                <span>${student.name} (座號 ${student.number})</span>
+                <span>${student.name} (${student.class || '未分班'} ${student.number}號)</span>
                 <button class="unassigned-delete-btn" onclick="event.stopPropagation(); deleteStudent('${student.name}')">×</button>
             `;
 
@@ -1386,16 +1437,22 @@ async function saveSeatLayout() {
 // ========== 學生操作 ==========
 function addStudent() {
     const name = document.getElementById('studentName').value.trim();
+    const studentClass = document.getElementById('studentClass').value;
     const number = parseInt(document.getElementById('studentNumber').value);
 
     if (!name) { alert('請輸入姓名！'); return; }
+    if (!studentClass) { alert('請選擇班級！'); return; }
     if (!number || number < 1) { alert('請輸入有效座號！'); return; }
     if (students.find(s => s.name === name)) { alert('學生已存在！'); return; }
-    if (students.find(s => s.number === number)) { alert('座號已被使用！'); return; }
+    if (students.find(s => s.number === number && s.class === studentClass)) { 
+        alert(`此座號在${studentClass}班已被使用！`); 
+        return; 
+    }
 
-    students.push({ name, number, row: null, col: null });
+    students.push({ name, class: studentClass, number, row: null, col: null });
     saveStudents();
     document.getElementById('studentName').value = '';
+    document.getElementById('studentClass').value = '';
     document.getElementById('studentNumber').value = '';
     renderSeats();
     updateStats();
@@ -1669,7 +1726,8 @@ function searchStudents() {
     
     const matched = students.filter(s => 
         s.name.toLowerCase().includes(keyword) || 
-        s.number.toString().includes(keyword)
+        s.number.toString().includes(keyword) ||
+        (s.class && s.class.toLowerCase().includes(keyword))
     );
     
     if (matched.length === 0) {
@@ -1693,7 +1751,7 @@ function searchStudents() {
             <div class="search-result-item">
                 <div class="search-result-info">
                     <div class="search-result-name" onclick="showStudentRecord('${s.name}')">${s.name}</div>
-                    <div class="search-result-details">座號：${s.number} | ${formatDate(date)}</div>
+                    <div class="search-result-details">${s.class || '未分班'} ${s.number}號 | ${formatDate(date)}</div>
                 </div>
                 <div class="search-result-status ${statusClass}">${statusText}</div>
                 <div class="search-result-actions">
@@ -1730,7 +1788,7 @@ function showStudentRecord(name) {
     if (!student) return;
     
     currentEditStudent = student;
-    document.getElementById('studentRecordTitle').textContent = `${student.name} (座號 ${student.number}) 的出缺席記錄`;
+    document.getElementById('studentRecordTitle').textContent = `${student.name} (${student.class || '未分班'} ${student.number}號) 的出缺席記錄`;
     
     const records = [];
     Object.keys(attendance).sort().reverse().forEach(date => {
@@ -1771,6 +1829,7 @@ function showEditStudentModal() {
     
     document.getElementById('editStudentTitle').textContent = `修改學生資料 - ${currentEditStudent.name}`;
     document.getElementById('editStudentName').value = currentEditStudent.name;
+    document.getElementById('editStudentClass').value = currentEditStudent.class || '';
     document.getElementById('editStudentNumber').value = currentEditStudent.number;
     
     document.getElementById('editStudentModal').classList.add('show');
@@ -1785,23 +1844,26 @@ async function saveEditStudent() {
     if (!currentEditStudent) return;
     
     const newName = document.getElementById('editStudentName').value.trim();
+    const newClass = document.getElementById('editStudentClass').value;
     const newNumber = parseInt(document.getElementById('editStudentNumber').value);
     
     if (!newName) { alert('請輸入姓名！'); return; }
+    if (!newClass) { alert('請選擇班級！'); return; }
     if (!newNumber || newNumber < 1) { alert('請輸入有效座號！'); return; }
     
     // 檢查姓名是否已被其他學生使用
     const nameExists = students.find(s => s.name === newName && s.name !== currentEditStudent.name);
     if (nameExists) { alert('此姓名已被其他學生使用！'); return; }
     
-    // 檢查座號是否已被其他學生使用
-    const numberExists = students.find(s => s.number === newNumber && s.name !== currentEditStudent.name);
-    if (numberExists) { alert('此座號已被其他學生使用！'); return; }
+    // 檢查同班級座號是否已被其他學生使用
+    const numberExists = students.find(s => s.class === newClass && s.number === newNumber && s.name !== currentEditStudent.name);
+    if (numberExists) { alert(`此座號在${newClass}班已被其他學生使用！`); return; }
     
     const oldName = currentEditStudent.name;
     
     // 更新學生資料
     currentEditStudent.name = newName;
+    currentEditStudent.class = newClass;
     currentEditStudent.number = newNumber;
     
     // 更新出勤記錄中的學生名稱（如果姓名有變更）
@@ -1836,7 +1898,12 @@ function showAbsentList(date) {
             return { student, record: attendance[date][name] };
         })
         .filter(item => item.student)
-        .sort((a, b) => a.student.number - b.student.number);
+        .sort((a, b) => {
+            if (a.student.class !== b.student.class) {
+                return (a.student.class || '').localeCompare(b.student.class || '');
+            }
+            return a.student.number - b.student.number;
+        });
     
     if (absentStudents.length === 0) return;
     
@@ -1844,7 +1911,7 @@ function showAbsentList(date) {
     document.getElementById('absentListContent').innerHTML = absentStudents.map(({ student, record }) => {
         let leaveInfo = record.leaveTypeLabel || '其他';
         if (record.periodsText) leaveInfo += ` (${record.periodsText})`;
-        return `<div class="search-result-item" onclick="closeAbsentList(); setTimeout(() => showStudentRecord('${student.name}'), 100);"><div class="search-result-info"><div class="search-result-name">${student.name}</div><div class="search-result-details">座號：${student.number} | 假別：${leaveInfo}</div></div></div>`;
+        return `<div class="search-result-item" onclick="closeAbsentList(); setTimeout(() => showStudentRecord('${student.name}'), 100);"><div class="search-result-info"><div class="search-result-name">${student.name}</div><div class="search-result-details">${student.class || '未分班'} ${student.number}號 | 假別：${leaveInfo}</div></div></div>`;
     }).join('');
     
     document.getElementById('absentListModal').classList.add('show');
