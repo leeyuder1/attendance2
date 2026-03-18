@@ -59,6 +59,10 @@
             margin-bottom: 15px;
         }
 
+        .search-controls input[type="text"] {
+            width: 200px; /* 寬度減半 */
+        }
+
         .search-results {
             margin-top: 15px;
             padding: 15px;
@@ -134,7 +138,7 @@
             margin-left: 15px;
         }
 
-        .control-panel {
+        .top-control-panel {
             display: flex;
             gap: 15px;
             margin-bottom: 30px;
@@ -143,6 +147,18 @@
             padding: 20px;
             background: #f8f9fa;
             border-radius: 12px;
+        }
+
+        .bottom-control-panel {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px solid #667eea;
         }
 
         .control-group {
@@ -415,7 +431,7 @@
 
         .seat-number {
             font-size: 0.7em;
-            color: #999;
+            color: #667eea;
             margin-bottom: 2px;
         }
 
@@ -430,7 +446,7 @@
 
         .seat-class {
             font-size: 0.7em;
-            color: #667eea;
+            color: #999;
             margin-bottom: 2px;
         }
 
@@ -831,7 +847,8 @@
         }
 
         @media (max-width: 768px) {
-            .control-panel {
+            .top-control-panel,
+            .bottom-control-panel {
                 flex-direction: column;
                 align-items: stretch;
             }
@@ -869,8 +886,8 @@
                     <input type="date" id="searchDate">
                 </div>
                 <div class="control-group">
-                    <label for="searchInput">搜尋學生（姓名或座號）：</label>
-                    <input type="text" id="searchInput" placeholder="輸入姓名或座號">
+                    <label for="searchInput">搜尋學生：</label>
+                    <input type="text" id="searchInput" placeholder="姓名或座號">
                 </div>
                 <button onclick="searchStudents()" class="btn-success">🔍 搜尋</button>
                 <button onclick="clearSearch()" class="btn-danger">清除</button>
@@ -878,25 +895,8 @@
             <div id="searchResults" class="search-results" style="display:none;"></div>
         </div>
 
-        <!-- 控制面板 -->
-        <div class="control-panel">
-            <div class="control-group">
-                <label for="studentName">姓名：</label>
-                <input type="text" id="studentName" placeholder="學生姓名">
-            </div>
-            <div class="control-group" style="position: relative;">
-                <label for="studentClass">班級：</label>
-                <select id="studentClass" style="min-width: 100px;">
-                    <option value="">請選擇班級</option>
-                </select>
-                <button onclick="showClassManager()" class="btn-info" style="padding: 10px; font-size: 14px;" title="管理班級">📋 管理</button>
-            </div>
-            <div class="control-group">
-                <label for="studentNumber">座號：</label>
-                <input type="number" id="studentNumber" placeholder="座號" min="1">
-            </div>
-            <button onclick="addStudent()" class="btn-success">➕ 新增學生</button>
-            
+        <!-- 上方面板 - 日期和座位設定 -->
+        <div class="top-control-panel">
             <div class="control-group">
                 <label for="selectedDate">日期：</label>
                 <input type="date" id="selectedDate">
@@ -961,6 +961,27 @@
         <div class="unassigned-students" id="unassignedStudents" style="display:none;">
             <h3 class="section-title">未分配座位</h3>
             <div class="unassigned-list" id="unassignedList"></div>
+        </div>
+
+        <!-- 下方面板 - 新增學生 -->
+        <div class="bottom-control-panel">
+            <h3 style="margin-right:20px; color:#333;">➕ 新增學生</h3>
+            <div class="control-group">
+                <label for="studentName">姓名：</label>
+                <input type="text" id="studentName" placeholder="學生姓名">
+            </div>
+            <div class="control-group" style="position: relative;">
+                <label for="studentClass">班級：</label>
+                <select id="studentClass" style="min-width: 100px;">
+                    <option value="">請選擇班級</option>
+                </select>
+                <button onclick="showClassManager()" class="btn-info" style="padding: 10px; font-size: 14px;" title="管理班級">📋 管理</button>
+            </div>
+            <div class="control-group">
+                <label for="studentNumber">座號：</label>
+                <input type="number" id="studentNumber" placeholder="座號" min="1">
+            </div>
+            <button onclick="addStudent()" class="btn-success">➕ 新增學生</button>
         </div>
     </div>
 </div>
@@ -1403,12 +1424,13 @@ function renderSeats() {
                     // 顯示格數的條件
                     const pointsText = (showPoints && studentPoints[student.number]) ? ` (${studentPoints[student.number]})` : '';
 
+                    // 班級和座號互換位置
                     card.innerHTML = `
                         <button class="delete-student-btn" onclick="event.stopPropagation(); deleteStudent('${student.name}')">×</button>
-                        <div class="seat-number">座號 ${student.number}</div>
+                        <div class="seat-number">${student.number}號</div>
                         <div class="seat-class">${student.class || ''}</div>
                         <div class="seat-name" onclick="event.stopPropagation(); showStudentRecord('${student.name}')">${student.name}${pointsText}</div>
-                        ${date ? (isPresent ? '<div class="seat-status present">✓ 出席</div>' : (isAbsent ? '<div class="seat-status absent">✗ 請假</div>' : '<div style="font-size:0.7em; color:#999;">未記錄</div>')) : ''}
+                        ${date ? (isPresent ? '<div class="seat-status present">✓ 出席</div>' : (isAbsent ? '<div class="seat-status absent">✗ 請假</div>' : '')) : ''}
                     `;
 
                     card.addEventListener('click', (e) => {
@@ -1883,8 +1905,7 @@ function searchStudents() {
     
     const matched = students.filter(s => 
         s.name.toLowerCase().includes(keyword) || 
-        s.number.toString().includes(keyword) ||
-        (s.class && s.class.toLowerCase().includes(keyword))
+        s.number.toString().includes(keyword)
     );
     
     if (matched.length === 0) {
