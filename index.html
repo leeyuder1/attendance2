@@ -1529,10 +1529,21 @@ function renderSeats() {
                             ${date ? (isPresent ? '<div class="seat-status present" style="background: #d1fae5; color: #065f46; padding: 3px 10px; border-radius: 20px; font-size: 0.75em; font-weight: 600; letter-spacing: 0.3px; margin-top: 2px;">✓ 出席</div>' : (isAbsent ? '<div class="seat-status absent" style="background: #fee2e2; color: #991b1b; padding: 3px 10px; border-radius: 20px; font-size: 0.75em; font-weight: 600; letter-spacing: 0.3px; margin-top: 2px;">✗ 請假</div>' : '')) : ''}
                         `;
 
-                    card.addEventListener('dragstart', (e) => {
-                        draggingStudent = student.name;
-                        card.classList.add('dragging');
-                        e.dataTransfer.setData('text/plain', student.name);
+                    card.addEventListener('click', (e) => {
+                        // 阻止事件冒泡
+                        e.stopPropagation();
+    
+                        // 如果點擊的是刪除按鈕或姓名，不處理（讓它們各自處理）
+                        if (e.target.classList.contains('delete-student-btn') || e.target.classList.contains('seat-name')) {
+                            return;
+                        }
+    
+                        const currentDate = document.getElementById('selectedDate').value;
+                        if (currentDate) {
+                            showAttendanceOptions(student.name);
+                        } else {
+                            alert('請先選擇日期！');
+                        }
                     });
 
                     card.addEventListener('dragend', () => {
