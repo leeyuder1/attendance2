@@ -1193,9 +1193,9 @@ const GOOGLE_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/15YcjLSBNfVfXk
 
 // ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM 載入完成，開始初始化...');
+    // ... 其他程式碼 ...
     
-    // 設定今天日期
+    // 確保日期有值
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -1205,15 +1205,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('selectedDate').value = todayStr;
     document.getElementById('searchDate').value = todayStr;
     
-    // ✅ 立即顯示空的座位表格（避免白畫面）
-    seatLayout = { rows: 6, cols: 6 };
-    renderSeats(); // 先渲染空座位
-    
-    // 然後在背景載入真實資料
-    loadData();
-    
-    // 初始化縮放控制
-    setTimeout(initZoomControls, 500);
+    // ... 其他程式碼 ...
 });
 // ========== 載入班級列表 ==========
 function loadClassList() {
@@ -1535,9 +1527,14 @@ function renderSeats() {
                         e.dataTransfer.setData('text/plain', student.name);
                     });
 
-                    card.addEventListener('dragend', () => {
-                        draggingStudent = null;
-                        card.classList.remove('dragging');
+                    card.addEventListener('click', (e) => {
+                        // 確保點擊的不是姓名或刪除按鈕
+                        if (!e.target.classList.contains('seat-name') && !e.target.classList.contains('delete-student-btn')) {
+                            const date = document.getElementById('selectedDate').value;
+                            if (date) {
+                                showAttendanceOptions(student.name);
+                            }
+                        }
                     });
 
                     cell.appendChild(card);
@@ -1811,7 +1808,10 @@ function undoShuffle() {
 // ========== 出勤記錄 ==========
 function showAttendanceOptions(name) {
     const date = document.getElementById('selectedDate').value;
-    if (!date) { alert('請選擇日期'); return; }
+    if (!date) { 
+        alert('請選擇日期！'); 
+        return;
+    }
     
     currentLeaveStudent = name;
     document.getElementById('attendanceModalTitle').textContent = `選擇「${name}」的出勤狀態`;
