@@ -341,81 +341,89 @@
         }
 
         .seat-cell {
-            width: 130px;
-            height: 110px;
-            border: 2px dashed #ddd;
-            border-radius: 8px;
+            width: 140px;  /* 稍微加寬，讓內容更舒適 */
+            height: 120px; /* 稍微加高 */
+            border: 2px solid #e2e8f0; /* 使用更柔和的邊框色 */
+            border-radius: 16px; /* 加大圓角，更現代 */
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f8f9fa;
+            background: #f8fafc; /* 更乾淨的背景色 */
             position: relative;
-            transition: all 0.3s;
-            min-height: 110px;
+            transition: all 0.2s ease;
+            min-height: 120px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); /* 添加極淡陰影增加立體感 */
         }
         .seat-cell.dragover {
-            border-color: #667eea;
-            background: #e7f0ff;
-            transform: scale(1.05);
-            border-style: solid;
-            border-width: 3px;
+            border-color: #818cf8;
+            background: #eef2ff;
+            transform: scale(1.02);
+            box-shadow: 0 8px 16px rgba(79, 70, 229, 0.1);
         }
 
         .seat-cell.has-student {
-            border: 2px solid #667eea;
+            border-color: #cbd5e1;
             background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
         .student-seat-card {
             width: 100%;
             height: 100%;
             background: white;
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            padding: 6px 8px;
+            border: none; /* 移除邊框，因為 cell 已經有 */
+            border-radius: 14px;
+            padding: 8px 6px;
             cursor: move;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            transition: all 0.3s;
+            transition: all 0.15s ease;
             position: relative;
+            box-sizing: border-box;
         }
 
         .delete-student-btn {
             position: absolute;
-            top: 4px;
-            right: 4px;
-            width: 20px;
-            height: 20px;
-            background: #dc3545;
-            color: white;
+            top: 2px;
+            right: 2px;
+            width: 22px;
+            height: 22px;
+            background: #fecaca;
+            color: #991b1b;
             border: none;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 14px;
+            font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
-            z-index: 20;
+            transition: all 0.15s ease;
+            z-index: 10;
             line-height: 1;
             padding: 0;
+            opacity: 0.6;
         }
 
         .delete-student-btn:hover {
-            background: #c82333;
-            transform: scale(1.2);
+            background: #ef4444;
+            color: white;
+            transform: scale(1.1);
+            opacity: 1;
         }
 
         .student-seat-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-            z-index: 10;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.2);
+            background-color: #ffffff;
         }
 
         .student-seat-card.dragging {
-            opacity: 0.5;
+            opacity: 0.6;
+            transform: scale(0.98);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
         }
 
         .student-seat-card.present {
@@ -435,15 +443,17 @@
         }
 
         .seat-name {
-            font-weight: bold;
-            font-size: 1.1em;
-            color: #333;
+            font-weight: 600;
+            color: #1f2937;
             cursor: pointer;
-            text-decoration: underline;
             text-align: center;
             word-break: break-word;
             max-width: 100%;
-            line-height: 1.2;
+            transition: color 0.15s ease;
+        }
+
+        .seat-name:hover {
+            color: #4f46e5; /* 懸停時變為主題色 */
         }
         .seat-class {
             font-size: 0.7em;
@@ -452,11 +462,13 @@
         }
 
         .seat-status {
-            font-size: 0.8em;
-            padding: 2px 6px;
-            border-radius: 4px;
-            width: fit-content;
-            margin-top: 0;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            margin-top: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
         }
 
         .seat-status.present {
@@ -1429,19 +1441,15 @@ function renderSeats() {
                     // 班級和座號互換位置
                     card.innerHTML = `
                         <button class="delete-student-btn" onclick="event.stopPropagation(); deleteStudent('${student.name}')">×</button>
-                        <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 5px;">
-                            <span style="font-size: 0.85em; font-weight: bold; color: #667eea;">${student.class || ''}</span>
-                            <span style="font-size: 0.85em; font-weight: bold; color: #333;">${student.number}號</span>
-                        </div>
-                        <div class="seat-name" style="font-size: 1.1em; font-weight: bold; margin: 5px 0; text-align: center;" onclick="event.stopPropagation(); showStudentRecord('${student.name}')">${student.name}${pointsText}</div>
-                        ${date ? (isPresent ? '<div class="seat-status present" style="font-size: 0.85em; padding: 4px 8px;">✓ 出席</div>' : (isAbsent ? '<div class="seat-status absent" style="font-size: 0.85em; padding: 4px 8px;">✗ 請假</div>' : '')) : ''}
-                    `;
-
-                    card.addEventListener('click', (e) => {
-                        if (!e.target.classList.contains('seat-name') && !e.target.classList.contains('delete-student-btn')) {
-                            if (date) showAttendanceOptions(student.name);
-                        }
-                    });
+                        <div class="seat-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 2px 0; border-bottom: 1px dashed #e0e7ff; margin-bottom: 4px;">
+                                <span class="seat-class-badge" style="background: #e0e7ff; color: #4f46e5; padding: 2px 6px; border-radius: 12px; font-size: 0.7em; font-weight: 600; letter-spacing: 0.5px;">${student.class || '未分班'}</span>
+                                <span class="seat-number-badge" style="background: #f3f4f6; color: #4b5563; padding: 2px 8px; border-radius: 10px; font-size: 0.7em; font-weight: 600;">#${student.number}</span>
+                            </div>
+                            <div class="seat-name" style="font-size: 1.2em; font-weight: 600; color: #1f2937; line-height: 1.3; margin: 2px 0 3px 0; text-align: center; width: 100%; text-decoration: none; cursor: pointer;" onclick="event.stopPropagation(); showStudentRecord('${student.name}')">
+                                ${student.name}${pointsText ? `<span style="font-size: 0.7em; color: #9ca3af; margin-left: 3px; font-weight: normal;">${pointsText}</span>` : ''}
+                            </div>
+                            ${date ? (isPresent ? '<div class="seat-status present" style="background: #d1fae5; color: #065f46; padding: 3px 10px; border-radius: 20px; font-size: 0.75em; font-weight: 600; letter-spacing: 0.3px; margin-top: 2px;">✓ 出席</div>' : (isAbsent ? '<div class="seat-status absent" style="background: #fee2e2; color: #991b1b; padding: 3px 10px; border-radius: 20px; font-size: 0.75em; font-weight: 600; letter-spacing: 0.3px; margin-top: 2px;">✗ 請假</div>' : '')) : ''}
+                        `;
 
                     card.addEventListener('dragstart', (e) => {
                         draggingStudent = student.name;
