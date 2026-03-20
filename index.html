@@ -1327,19 +1327,78 @@ function deleteClass(className) {
 // ========== 資料載入函數 ==========
 async function loadData() {
     try {
-        // ... 載入學生、出勤、座位配置 ...
+        console.log('開始載入 Firebase 資料...');
         
+        // 載入學生資料
+        const studentsDoc = await db.collection('data').doc('students').get();
+        if (studentsDoc.exists) {
+            students = studentsDoc.data().data || [];
+            console.log('學生資料載入成功:', students.length, '位學生');
+            // 同步到 localStorage
+            localStorage.setItem('students', JSON.stringify(students));
+        } else {
+            // 如果 Firebase 沒有資料，嘗試從 localStorage 載入
+            students = JSON.parse(localStorage.getItem('students')) || [];
+            console.log('從 localStorage 載入學生資料:', students.length, '位學生');
+        }
+
+        // 載入出勤記錄
+        const attendanceDoc = await db.collection('data').doc('attendance').get();
+        if (attendanceDoc.exists) {
+            attendance = attendanceDoc.data().data || {};
+            console.log('出勤記錄載入成功');
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+        } else {
+            attendance = JSON.parse(localStorage.getItem('attendance')) || {};
+        }
+
+        // 載入座位配置
+        const seatLayoutDoc = await db.collection('data').doc('seatLayout').get();
+        if (seatLayoutDoc.exists) {
+            seatLayout = seatLayoutDoc.data().data || { rows: 6, cols: 6 };
+            console.log('座位配置載入成功:', seatLayout);
+            localStorage.setItem('seatLayout', JSON.stringify(seatLayout));
+        } else {
+            const savedLayout = localStorage.getItem('seatLayout');
+            if (savedLayout) {
+                seatLayout = JSON.parse(savedLayout);
+            } else {
+                seatLayout = { rows: 6, cols: 6 };
+            }
+        }
+
         // 更新UI
         document.getElementById('rows').value = seatLayout.rows;
         document.getElementById('cols').value = seatLayout.cols;
         
+        // 載入班級列表
         loadClassList();
+        
+        // 設置 dataLoaded 為 true
+        dataLoaded = true;
+        
+        // 渲染座位和統計
         renderSeats();
         updateStats();
+        
+        // 非同步載入格數資料
         setTimeout(() => loadStudentPoints(), 100);
         
+        console.log('所有資料載入完成');
+        
     } catch (error) {
-        // ...
+        console.error('載入資料失敗:', error);
+        // 發生錯誤時，嘗試使用 localStorage 作為備份
+        students = JSON.parse(localStorage.getItem('students')) || [];
+        attendance = JSON.parse(localStorage.getItem('attendance')) || {};
+        const savedLayout = localStorage.getItem('seatLayout');
+        if (savedLayout) {
+            seatLayout = JSON.parse(savedLayout);
+        }
+        dataLoaded = true;
+        renderSeats();
+        updateStats();
+        alert('載入資料失敗，使用本地備份資料。錯誤訊息：' + error.message);
     }
 }
 
@@ -1381,18 +1440,26 @@ db.collection('data').doc('students').onSnapshot((doc) => {
     }
 });
 
+db.collection('data').doc('students').onSnapshot((doc) => {
+    if (doc.exists && dataLoaded) {
+        const newStudents = doc.data().data || [];
+        if (JSON.stringify(newStudents) !== JSON.stringify(students)) {
+            students = newStudents;
+            localStorage.setItem('students', JSON.stringify(students));
+            renderSeats();
+            updateStats();
+        }
+    }
+});
+
 db.collection('data').doc('attendance').onSnapshot((doc) => {
     if (doc.exists && dataLoaded) {
         const newAttendance = doc.data().data || {};
         if (JSON.stringify(newAttendance) !== JSON.stringify(attendance)) {
             attendance = newAttendance;
             localStorage.setItem('attendance', JSON.stringify(attendance));
-            
-            if (renderTimer) clearTimeout(renderTimer);
-            renderTimer = setTimeout(() => {
-                renderSeats();
-                updateStats();
-            }, 50);
+            renderSeats();
+            updateStats();
         }
     }
 });
@@ -1404,11 +1471,7 @@ db.collection('data').doc('seatLayout').onSnapshot((doc) => {
             seatLayout = newSeatLayout;
             document.getElementById('rows').value = seatLayout.rows;
             document.getElementById('cols').value = seatLayout.cols;
-            
-            if (renderTimer) clearTimeout(renderTimer);
-            renderTimer = setTimeout(() => {
-                renderSeats();
-            }, 50);
+            renderSeats();
         }
     }
 });
