@@ -341,19 +341,26 @@
         }
 
         .seat-cell {
-            width: 140px;  /* 稍微加寬，讓內容更舒適 */
-            height: 120px; /* 稍微加高 */
-            border: 2px solid #e2e8f0; /* 使用更柔和的邊框色 */
-            border-radius: 16px; /* 加大圓角，更現代 */
+            width: 140px;
+            height: 120px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f8fafc; /* 更乾淨的背景色 */
+            background: #f8fafc;
             position: relative;
             transition: all 0.2s ease;
             min-height: 120px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02); /* 添加極淡陰影增加立體感 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            overflow: visible;  /* 重要：允許子元素超出邊界 */
         }
+
+        /* 當滑鼠懸停在卡片上時，顯示刪除按鈕會更明顯 */
+        .seat-cell:hover .delete-student-btn {
+            opacity: 1;
+        }
+        
         .seat-cell.dragover {
             border-color: #818cf8;
             background: #eef2ff;
@@ -371,9 +378,9 @@
             width: 100%;
             height: 100%;
             background: white;
-            border: none; /* 移除邊框，因為 cell 已經有 */
+            border: none;
             border-radius: 14px;
-            padding: 8px 6px;
+            padding: 8px 6px 6px 6px;  /* 上內距稍微加大，給按鈕空間 */
             cursor: move;
             display: flex;
             flex-direction: column;
@@ -386,13 +393,13 @@
 
         .delete-student-btn {
             position: absolute;
-            top: 2px;
-            right: 2px;
-            width: 22px;
-            height: 22px;
+            top: -8px;      /* 向上移動，超出卡片邊界 */
+            right: -6px;    /* 向右移動，超出卡片邊界 */
+            width: 24px;
+            height: 24px;
             background: #fecaca;
             color: #991b1b;
-            border: none;
+            border: 2px solid white;  /* 加白色邊框讓它更突出 */
             border-radius: 50%;
             cursor: pointer;
             font-size: 14px;
@@ -400,11 +407,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.15s ease;
-            z-index: 10;
+            transition: all 0.2s ease;
+            z-index: 20;
             line-height: 1;
             padding: 0;
-            opacity: 0.6;
+            opacity: 0.7;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .delete-student-btn:hover {
@@ -412,6 +420,7 @@
             color: white;
             transform: scale(1.1);
             opacity: 1;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
 
         .student-seat-card:hover {
