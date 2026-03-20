@@ -868,6 +868,27 @@
         .add-class-group button {
             white-space: nowrap;
         }
+        /* 載入動畫 */
+        .skeleton-grid {
+            display: grid;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .skeleton-cell {
+            width: 140px;
+            height: 120px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 16px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
 
         @media (max-width: 768px) {
             .top-control-panel,
@@ -1184,13 +1205,16 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('selectedDate').value = todayStr;
     document.getElementById('searchDate').value = todayStr;
     
-    // 載入資料
+    // ✅ 立即顯示空的座位表格（避免白畫面）
+    seatLayout = { rows: 6, cols: 6 };
+    renderSeats(); // 先渲染空座位
+    
+    // 然後在背景載入真實資料
     loadData();
     
     // 初始化縮放控制
     setTimeout(initZoomControls, 500);
 });
-
 // ========== 載入班級列表 ==========
 function loadClassList() {
     // 從 localStorage 載入班級列表
@@ -1300,112 +1324,94 @@ function deleteClass(className) {
 }
 
 // ========== 資料載入函數 ==========
+// ========== 資料載入函數 ==========
 async function loadData() {
     try {
-        console.log('開始載入 Firebase 資料...');
+        // ... 載入學生、出勤、座位配置 ...
         
-        // 載入學生資料
-        const studentsDoc = await db.collection('data').doc('students').get();
-        if (studentsDoc.exists) {
-            students = studentsDoc.data().data || [];
-            console.log('學生資料載入成功:', students.length, '位學生');
-        } else {
-            console.log('無學生資料');
-            students = [];
-        }
-
-        // 載入出勤記錄
-        const attendanceDoc = await db.collection('data').doc('attendance').get();
-        if (attendanceDoc.exists) {
-            attendance = attendanceDoc.data().data || {};
-            console.log('出勤記錄載入成功');
-        } else {
-            attendance = {};
-        }
-
-        // 載入座位配置
-        const seatLayoutDoc = await db.collection('data').doc('seatLayout').get();
-        if (seatLayoutDoc.exists) {
-            seatLayout = seatLayoutDoc.data().data || { rows: 6, cols: 6 };
-            console.log('座位配置載入成功:', seatLayout);
-        } else {
-            seatLayout = { rows: 6, cols: 6 };
-        }
-
         // 更新UI
         document.getElementById('rows').value = seatLayout.rows;
         document.getElementById('cols').value = seatLayout.cols;
         
-        // 載入班級列表
         loadClassList();
-        
-        // 渲染畫面
         renderSeats();
         updateStats();
-        
-        // 載入格數資料
-        loadStudentPoints();
-        
-        console.log('所有資料載入完成');
+        setTimeout(() => loadStudentPoints(), 100);
         
     } catch (error) {
-        console.error('載入資料失敗:', error);
-        alert('載入資料失敗，請重新整理頁面。錯誤訊息：' + error.message);
+        // ...
     }
 }
 
 // ========== 格數資料載入 ==========
+let cachedPoints = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 10 * 60 * 1000;
+
 async function loadStudentPoints() {
-    try {
-        const response = await fetch(GOOGLE_SHEETS_URL + '&t=' + Date.now());
-        if (!response.ok) throw new Error('無法讀取 Google Sheets');
-        
-        const csvText = await response.text();
-        const lines = csvText.split('\n').filter(line => line.trim());
-        
-        studentPoints = {};
-        
-        lines.forEach((line, index) => {
-            if (index === 45) return;
-            const columns = line.split(',').map(col => col.trim());
-            if (columns.length > 0) {
-                const points = parseFloat(columns[0]) || 0;
-                if (!isNaN(points)) {
-                    studentPoints[index + 1] = points;
-                }
-            }
-        });
-        
-        console.log('格數資料載入成功');
-        renderSeats();
-        updateTopStudents();
-        
-    } catch (error) {
-        console.error('載入格數失敗:', error);
-    }
+    // ...
 }
 
 // ========== 更新前12名格數 ==========
 function updateTopStudents() {
-    const display = document.getElementById('topStudentsDisplay');
-    const list = document.getElementById('topStudentsList');
-    
-    if (!display || !list) return;
-    
-    const pointsArray = Object.entries(studentPoints)
-        .map(([num, points]) => ({ number: parseInt(num), points }))
-        .filter(item => item.points > 0)
-        .sort((a, b) => b.points - a.points)
-        .slice(0, 12);
-    
-    if (pointsArray.length === 0) {
-        display.style.display = 'none';
-        return;
-    }
-    
-    list.textContent = pointsArray.map(item => `${item.number}號(${item.points})`).join('、');
-    display.style.display = 'block';
+    // ...
 }
+
+// ⭐ 第三點：需要在這裡加入以下 Firebase 監聽程式碼（請加在 updateTopStudents 函數之後）
+
+// 先在全域變數區宣告 renderTimer（如果還沒宣告的話）
+let renderTimer = null;
+
+// 然後加入 Firebase 監聽
+// 注意：這段程式碼應該在 loadData() 函數之外，但在任何地方都可以執行
+db.collection('data').doc('students').onSnapshot((doc) => {
+    if (doc.exists && dataLoaded) {
+        const newStudents = doc.data().data || [];
+        if (JSON.stringify(newStudents) !== JSON.stringify(students)) {
+            students = newStudents;
+            localStorage.setItem('students', JSON.stringify(students));
+            
+            // 防抖：避免短時間內多次渲染
+            if (renderTimer) clearTimeout(renderTimer);
+            renderTimer = setTimeout(() => {
+                renderSeats();
+                updateStats();
+            }, 50);
+        }
+    }
+});
+
+db.collection('data').doc('attendance').onSnapshot((doc) => {
+    if (doc.exists && dataLoaded) {
+        const newAttendance = doc.data().data || {};
+        if (JSON.stringify(newAttendance) !== JSON.stringify(attendance)) {
+            attendance = newAttendance;
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+            
+            if (renderTimer) clearTimeout(renderTimer);
+            renderTimer = setTimeout(() => {
+                renderSeats();
+                updateStats();
+            }, 50);
+        }
+    }
+});
+
+db.collection('data').doc('seatLayout').onSnapshot((doc) => {
+    if (doc.exists && dataLoaded) {
+        const newSeatLayout = doc.data().data || { rows: 6, cols: 6 };
+        if (JSON.stringify(newSeatLayout) !== JSON.stringify(seatLayout)) {
+            seatLayout = newSeatLayout;
+            document.getElementById('rows').value = seatLayout.rows;
+            document.getElementById('cols').value = seatLayout.cols;
+            
+            if (renderTimer) clearTimeout(renderTimer);
+            renderTimer = setTimeout(() => {
+                renderSeats();
+            }, 50);
+        }
+    }
+});
 
 // ========== 渲染座位 ==========
 function renderSeats() {
