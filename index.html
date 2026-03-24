@@ -342,7 +342,7 @@
 
         .seat-cell {
             width: 140px;
-            height: 120px;
+            height: 130px;  /* 稍微增加高度，容納更多內容 */
             border: 2px solid #e2e8f0;
             border-radius: 16px;
             display: flex;
@@ -351,9 +351,8 @@
             background: #f8fafc;
             position: relative;
             transition: all 0.2s ease;
-            min-height: 120px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-            overflow: visible;  /* 重要：允許子元素超出邊界 */
+            min-height: 130px;
+            overflow: visible;
         }
 
         /* 當滑鼠懸停在卡片上時，顯示刪除按鈕會更明顯 */
@@ -380,12 +379,12 @@
             background: white;
             border: none;
             border-radius: 14px;
-            padding: 8px 6px 6px 6px;  /* 上內距稍微加大，給按鈕空間 */
+            padding: 8px 4px;
             cursor: move;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: space-between;
             transition: all 0.15s ease;
             position: relative;
             box-sizing: border-box;
@@ -393,26 +392,25 @@
 
         .delete-student-btn {
             position: absolute;
-            top: -8px;      /* 向上移動，超出卡片邊界 */
-            right: -6px;    /* 向右移動，超出卡片邊界 */
-            width: 24px;
-            height: 24px;
+            top: -8px;
+            right: -8px;
+            width: 22px;
+            height: 22px;
             background: #fecaca;
             color: #991b1b;
-            border: 2px solid white;  /* 加白色邊框讓它更突出 */
+            border: 2px solid white;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
             z-index: 20;
-            line-height: 1;
             padding: 0;
             opacity: 0.7;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .delete-student-btn:hover {
@@ -420,7 +418,6 @@
             color: white;
             transform: scale(1.1);
             opacity: 1;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
 
         .student-seat-card:hover {
@@ -451,18 +448,19 @@
             margin-bottom: 2px;
         }
 
+        /* 姓名樣式 - 置中 */
         .seat-name {
             font-weight: 600;
             color: #1f2937;
             cursor: pointer;
             text-align: center;
             word-break: break-word;
-            max-width: 100%;
-            transition: color 0.15s ease;
+            width: 100%;
+            margin: 4px 0;
         }
 
         .seat-name:hover {
-            color: #4f46e5; /* 懸停時變為主題色 */
+            color: #4f46e5;
         }
         .seat-class {
             font-size: 0.7em;
@@ -470,16 +468,31 @@
             margin-bottom: 2px;
         }
 
+        /* 狀態標籤 - 自動縮小文字 */
         .seat-status {
-            padding: 3px 10px;
+            display: inline-block;
+            max-width: 100%;
+            padding: 2px 6px;
             border-radius: 20px;
-            font-size: 0.75em;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            margin-top: 2px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            font-weight: 500;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.7em;
+            transition: all 0.1s ease;
         }
-
+        /* 當文字太長時，縮小字體 */
+        @media (max-width: 600px) {
+            .seat-status {
+                font-size: 0.6em;
+                padding: 2px 4px;
+            }
+    .seat-cell {
+        width: 120px;
+        height: 120px;
+    }
+}
         .seat-status.present {
             background: #28a745;
             color: white;
@@ -1572,12 +1585,12 @@ function renderSeats() {
                     // 班級和座號互換位置
                     card.innerHTML = `
                         <button class="delete-student-btn" onclick="event.stopPropagation(); deleteStudent('${student.name}')">×</button>
-                        <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 2px;">
-                            <span style="font-size: 0.85em; font-weight: bold; color: #667eea;">${student.class || ''}</span>
-                            <span style="font-size: 0.85em; font-weight: bold; color: #333;">${student.number}號</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 4px; margin-bottom: 4px;">
+                            <span style="font-size: 0.8em; font-weight: bold; color: #667eea; background: #eef2ff; padding: 2px 8px; border-radius: 12px;">${student.class || ''}</span>
+                            <span style="font-size: 0.8em; font-weight: bold; color: #4b5563; background: #f3f4f6; padding: 2px 8px; border-radius: 12px;">${student.number}號</span>
                         </div>
-                        <div class="seat-name" style="font-size: 1.1em; font-weight: bold; line-height: 1.2; margin: 0 0 2px 0; text-align: center; cursor: pointer;" onclick="event.stopPropagation(); showStudentRecord('${student.name}')">${student.name}${pointsText}</div>
-                        ${date ? (isPresent ? '<div class="seat-status present" style="background: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 20px; font-size: 0.75em;">✓ 出席</div>' : (isAbsent ? `<div class="seat-status absent" style="background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 20px; font-size: 0.75em;">✗ 請假${record?.periodsText ? ' (' + record.periodsText + ')' : ''}</div>` : '')) : ''}
+                        <div class="seat-name" style="font-size: 1.1em; font-weight: 600; color: #1f2937; text-align: center; margin: 4px 0; cursor: pointer; width: 100%;" onclick="event.stopPropagation(); showStudentRecord('${student.name}')">${student.name}${pointsText}</div>
+                        ${date ? (isPresent ? '<div class="seat-status present" style="background: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 20px; font-size: 0.7em; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">✓ 出席</div>' : (isAbsent ? `<div class="seat-status absent" style="background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 20px; font-size: 0.7em; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${record?.periodsText ? record.periodsText : ''}">✗ 請假${record?.periodsText ? ' (' + record.periodsText + ')' : ''}</div>` : '')) : ''}
                     `;
 
                     card.addEventListener('click', (e) => {
