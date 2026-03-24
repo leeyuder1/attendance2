@@ -1072,7 +1072,7 @@
             </button>
         </div>
         <div id="clearRecordBtn" style="margin-top:15px; display:none;">
-            <button onclick="clearAttendanceRecord()" class="btn-danger" style="width:100%;">清除記錄</button>
+            <button onclick="clearAttendanceRecord()" class="btn-danger" style="width:100%;">清除這天的請假記錄</button>
         </div>
         <div class="modal-actions">
             <button onclick="closeAttendanceModal()" class="btn-danger" style="width:100%;">取消</button>
@@ -1941,7 +1941,7 @@ function closeAttendanceModal() {
 }
 
 function clearAttendanceRecord() {
-    if (!confirm('確定清除記錄？')) return;
+    if (!confirm('確定清除這天的請假記錄？')) return;
     
     const date = document.getElementById('selectedDate').value;
     if (date && attendance[date] && attendance[date][currentLeaveStudent]) {
