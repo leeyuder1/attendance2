@@ -1323,7 +1323,58 @@ function deleteClass(className) {
     `).join('');
 }
 
-// ========== 資料載入函數 ==========
+// ========== 格數資料載入 ==========
+let cachedPoints = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 10 * 60 * 1000; // 10分鐘快取
+
+async function loadStudentPoints() {
+    try {
+        const now = Date.now();
+        
+        // 如果快取有效，直接使用快取
+        if (cachedPoints && (now - lastFetchTime) < CACHE_DURATION) {
+            studentPoints = cachedPoints;
+            console.log('使用快取的格數資料');
+            renderSeats();
+            updateTopStudents();
+            return;
+        }
+        
+        console.log('從 Google Sheets 載入格數資料...');
+        const response = await fetch(GOOGLE_SHEETS_URL + '&t=' + now);
+        if (!response.ok) throw new Error('無法讀取 Google Sheets');
+        
+        const csvText = await response.text();
+        const lines = csvText.split('\n').filter(line => line.trim());
+        
+        studentPoints = {};
+        
+        lines.forEach((line, index) => {
+            if (index === 45) return; // 跳過第46行（日期行）
+            const columns = line.split(',').map(col => col.trim());
+            if (columns.length > 0) {
+                const points = parseFloat(columns[0]) || 0;
+                if (!isNaN(points)) {
+                    studentPoints[index + 1] = points;
+                }
+            }
+        });
+        
+        // 儲存快取
+        cachedPoints = { ...studentPoints };
+        lastFetchTime = now;
+        
+        console.log('格數資料載入成功，共', Object.keys(studentPoints).length, '筆資料');
+        renderSeats();
+        updateTopStudents();
+        
+    } catch (error) {
+        console.error('載入格數失敗:', error);
+    }
+}
+
+    
 // ========== 資料載入函數 ==========
 async function loadData() {
     try {
@@ -1389,18 +1440,27 @@ async function loadData() {
     }
 }
 
-// ========== 格數資料載入 ==========
-let cachedPoints = null;
-let lastFetchTime = 0;
-const CACHE_DURATION = 10 * 60 * 1000;
-
-async function loadStudentPoints() {
-    // ...
-}
 
 // ========== 更新前12名格數 ==========
 function updateTopStudents() {
-    // ...
+    const display = document.getElementById('topStudentsDisplay');
+    const list = document.getElementById('topStudentsList');
+    
+    if (!display || !list) return;
+    
+    const pointsArray = Object.entries(studentPoints)
+        .map(([num, points]) => ({ number: parseInt(num), points }))
+        .filter(item => item.points > 0)
+        .sort((a, b) => b.points - a.points)
+        .slice(0, 12);
+    
+    if (pointsArray.length === 0) {
+        display.style.display = 'none';
+        return;
+    }
+    
+    list.textContent = pointsArray.map(item => `${item.number}號(${item.points})`).join('、');
+    display.style.display = 'block';
 }
 
 // ⭐ 第三點：需要在這裡加入以下 Firebase 監聽程式碼（請加在 updateTopStudents 函數之後）
