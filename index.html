@@ -1204,6 +1204,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.getElementById('selectedDate').value = todayStr;
     document.getElementById('searchDate').value = todayStr;
+     // ✅ 加入日期變更監聽
+    document.getElementById('selectedDate').addEventListener('change', function() {
+        console.log('日期變更為:', this.value);
+        renderSeats();
+        updateStats();
     
     // ✅ 立即顯示空的座位表格（避免白畫面）
     seatLayout = { rows: 6, cols: 6 };
