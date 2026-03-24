@@ -2031,7 +2031,7 @@ function recordAttendance(name, status) {
             leaveType: selectedLeaveType,
             leaveTypeLabel,
             periods: selectedPeriods,
-            periodsText: selectedPeriods.length === 11 ? '全天' : selectedPeriods.map(p => `第${p}節`).join('、')
+            periodsText: selectedPeriods.length === 11 ? '全天' : '第' + selectedPeriods.join(',') + '節'
         };
     }
     
