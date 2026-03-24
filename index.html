@@ -1901,7 +1901,7 @@ function undoShuffle() {
 // ========== 出勤記錄 ==========
 function showAttendanceOptions(name) {
     const date = document.getElementById('selectedDate').value;
-    if (!date) { alert('請選擇日期'); return; }
+    if (!date) { alert('請選擇日期！'); return; }
     
     currentLeaveStudent = name;
     document.getElementById('attendanceModalTitle').textContent = `選擇「${name}」的出勤狀態`;
@@ -1911,10 +1911,17 @@ function showAttendanceOptions(name) {
     const clearBtn = document.getElementById('clearRecordBtn');
     
     if (record) {
+        // 格式化日期顯示（MM/DD）
+        const dateObj = new Date(date + 'T00:00:00');
+        const dateDisplay = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
+        
         if (record.status === 'present') {
-            statusInfo.innerHTML = '<strong>目前狀態：</strong><span style="color:#28a745;">✓ 出席</span>';
+            statusInfo.innerHTML = `<strong>目前狀態：</strong><span style="color:#28a745; font-weight: bold;">${dateDisplay} ✓ 出席</span>`;
         } else {
-            statusInfo.innerHTML = `<strong>目前狀態：</strong><span style="color:#dc3545;">✗ 請假 - ${record.leaveTypeLabel || '其他'}</span>`;
+            // 組合請假資訊
+            let leaveText = record.leaveTypeLabel || '其他';
+            let periodsText = record.periodsText ? `(${record.periodsText})` : '';
+            statusInfo.innerHTML = `<strong>目前狀態：</strong><span style="color:#dc3545; font-weight: bold;">${dateDisplay} ✗ 請假 - ${leaveText}${periodsText}</span>`;
         }
         statusInfo.style.display = 'block';
         clearBtn.style.display = 'block';
