@@ -2075,7 +2075,7 @@ function searchStudents() {
             statusText = '✓ 出席';
             statusClass = 'present';
         } else if (record?.status === 'absent') {
-            statusText = `✗ 請假 - ${record.leaveTypeLabel || '其他'}`;
+            statusText = `✗ 請假 - ${record.leaveTypeLabel || '其他'}${record.periodsText ? ' (' + record.periodsText + ')' : ''}`;
             statusClass = 'absent';
         }
         
