@@ -1334,19 +1334,15 @@ async function loadData() {
         if (studentsDoc.exists) {
             students = studentsDoc.data().data || [];
             console.log('學生資料載入成功:', students.length, '位學生');
-            // 同步到 localStorage
             localStorage.setItem('students', JSON.stringify(students));
         } else {
-            // 如果 Firebase 沒有資料，嘗試從 localStorage 載入
             students = JSON.parse(localStorage.getItem('students')) || [];
-            console.log('從 localStorage 載入學生資料:', students.length, '位學生');
         }
 
         // 載入出勤記錄
         const attendanceDoc = await db.collection('data').doc('attendance').get();
         if (attendanceDoc.exists) {
             attendance = attendanceDoc.data().data || {};
-            console.log('出勤記錄載入成功');
             localStorage.setItem('attendance', JSON.stringify(attendance));
         } else {
             attendance = JSON.parse(localStorage.getItem('attendance')) || {};
@@ -1356,15 +1352,10 @@ async function loadData() {
         const seatLayoutDoc = await db.collection('data').doc('seatLayout').get();
         if (seatLayoutDoc.exists) {
             seatLayout = seatLayoutDoc.data().data || { rows: 6, cols: 6 };
-            console.log('座位配置載入成功:', seatLayout);
             localStorage.setItem('seatLayout', JSON.stringify(seatLayout));
         } else {
-            const savedLayout = localStorage.getItem('seatLayout');
-            if (savedLayout) {
-                seatLayout = JSON.parse(savedLayout);
-            } else {
-                seatLayout = { rows: 6, cols: 6 };
-            }
+            const saved = localStorage.getItem('seatLayout');
+            seatLayout = saved ? JSON.parse(saved) : { rows: 6, cols: 6 };
         }
 
         // 更新UI
@@ -1374,31 +1365,27 @@ async function loadData() {
         // 載入班級列表
         loadClassList();
         
-        // 設置 dataLoaded 為 true
         dataLoaded = true;
         
         // 渲染座位和統計
         renderSeats();
         updateStats();
         
-        // 非同步載入格數資料
+        // ✅ 關鍵：非同步載入格數資料
         setTimeout(() => loadStudentPoints(), 100);
         
         console.log('所有資料載入完成');
         
     } catch (error) {
         console.error('載入資料失敗:', error);
-        // 發生錯誤時，嘗試使用 localStorage 作為備份
         students = JSON.parse(localStorage.getItem('students')) || [];
         attendance = JSON.parse(localStorage.getItem('attendance')) || {};
-        const savedLayout = localStorage.getItem('seatLayout');
-        if (savedLayout) {
-            seatLayout = JSON.parse(savedLayout);
-        }
+        const saved = localStorage.getItem('seatLayout');
+        seatLayout = saved ? JSON.parse(saved) : { rows: 6, cols: 6 };
         dataLoaded = true;
         renderSeats();
         updateStats();
-        alert('載入資料失敗，使用本地備份資料。錯誤訊息：' + error.message);
+        setTimeout(() => loadStudentPoints(), 100);
     }
 }
 
