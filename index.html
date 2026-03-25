@@ -1625,6 +1625,12 @@ function renderSeats() {
                         }
                     });
 
+                    card.addEventListener('dragstart', (e) => {
+                        draggingStudent = student.name;
+                        card.classList.add('dragging');
+                        e.dataTransfer.setData('text/plain', student.name);
+                    });
+
                     card.addEventListener('dragend', () => {
                         draggingStudent = null;
                         card.classList.remove('dragging');
